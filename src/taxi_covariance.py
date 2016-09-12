@@ -187,10 +187,10 @@ class binned_variable(object):
     
 if __name__ == '__main__':
     # the directory with the data
-    #dir_base='./text_data/sub_sampling_16/'
-    #dir_base='./text_data/single_file/'
-    dir_base='./text_data/'
+    #dir_base='../data_full_textdata/'
+    dir_base='../data_full_textdata/sub_sampling_16/'
 
+    # read in all the data! 
     VarBig,Var_list=read_taxi_files(dir_base)
 
     
