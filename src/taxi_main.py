@@ -36,7 +36,7 @@ def read_all_variables(f,there_is_a_header):
         indx = indx-1
 
 #   Initizialize Variable Array
-    Vars=np.zeros((indx,7))
+    Vars=np.zeros((indx,11))
 
 #   Go back to start of file, loop again to read variables
     f.seek(0)
@@ -46,7 +46,8 @@ def read_all_variables(f,there_is_a_header):
 
     indx=0
     Var_list=['pickup_time_hr','dist_mi','speed_mph','psgger','fare',
-              'tips','payment_type']
+              'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
+              'drop_lat']
 
 #   loop over lines, store variables
     for line in f:
@@ -75,12 +76,16 @@ def read_all_variables(f,there_is_a_header):
                speed=dist / (drop_time - pickup_time) # [mi/hr]
 	   else:
 	       speed=0
-         
+           
 	 # other variables
 	   psgger=float(line[3]) # passenger count
 	   fare=float(line[12]) # base fare ammount [$]
 	   tips=float(line[15]) # tip amount [$]
 	   pay_type=float(line[11]) # payment type
+	   pickup_lat=float(line[6])
+           pickup_lon=float(line[5])
+	   drop_lat=float(line[10])
+           drop_lon=float(line[9])
 
          # store in Vars 
            Vars[indx,0]=pickup_time
@@ -90,13 +95,17 @@ def read_all_variables(f,there_is_a_header):
            Vars[indx,4]=fare
            Vars[indx,5]=tips
            Vars[indx,6]=pay_type
+           Vars[indx,7]=pickup_lon
+           Vars[indx,8]=pickup_lat
+           Vars[indx,9]=drop_lon
+           Vars[indx,10]=drop_lat
 
            indx=indx+1
 
     return Vars,Var_list
-"""-------------- END count_taxi_file ----------------------- """
 
 def read_taxi_files(dir_base):
+    """ reads in individual taxi file, stores variables """
 
     N_files=len(os.listdir(dir_base)) # number of files in directory
     ifile = 1 # file counter
@@ -133,6 +142,7 @@ def read_taxi_files(dir_base):
     return VarBig,Var_list
 
 class binned_variable(object):
+    """ class for variables binned by time """
     def __init__(self,name,time_b,varmin=0,varmax=1):
         self.varname = name # variable name
         self.time_be = time_b # time bins, edge values
@@ -183,27 +193,88 @@ class binned_variable(object):
 	self.hist_id_mean=bin_var.mean()
 	self.hist_id_med=np.median(bin_var)
          
+""" END OF FUNCTIONS AND CLASSES """
+""" PLOTTING FUNCTIONS BELOW """
+def map_proc(VarBig,Var_list,bin_varname,bin_min,bin_max,Pickup,nx,ny,
+            bottom_left=[40.697089, -74.027397],top_left=[40.823067, -74.027397],
+            bottom_right=[40.697089, -73.914240],top_right=[40.823067,-73.914240]):
+    # default is full manhattan
 
+    # wall street extent
+    #bottom_left=[40.701035, -74.022382]
+    #top_left=[40.715075, -74.022382]
+    #bottom_right=[40.701035, -74.000207]
+    #top_right=[40.715075, -74.000207]
     
-if __name__ == '__main__':
-    # the directory with the data
-    #dir_base='../data_full_textdata/'
-    dir_base='../data_full_textdata/sub_sampling_16/'
+    # columbus circle extent
+    #bottom_left=[40.765505, -73.985891]
+    #top_left=[40.770369, -73.985891]
+    #bottom_right=[40.765505,-73.978744]
+    #top_right=[40.770369,-73.978744]
 
-    # read in all the data! 
-    VarBig,Var_list=read_taxi_files(dir_base)
+    # build cell node grid
+    x=np.linspace(bottom_left[1],bottom_right[1],nx) # defined on cell corners
+    y=np.linspace(bottom_left[0],top_left[0],ny) # defined on cell corners
 
+    # create an empty TaxiCount array 
+    TotCount=np.zeros((ny-1,nx-1)) # defined on cell centers
+    MeanClr=np.zeros((ny-1,nx-1)) # defined on cell centers
+
+    # pull out lat/lon and variable lists depending on pickup or dropoff
+    if Pickup:
+       BigLat=VarBig[:,8] 
+       BigLon=VarBig[:,7] 
+    else:
+       BigLat=VarBig[:,10] 
+       BigLon=VarBig[:,9] 
+
+    ColorVar= VarBig[:,Var_list.index(bin_varname)]
+    indc=1
+
+    # count the number of points within each lat/lon bin
+    for ix in range(nx-1):
+        for iy in range(ny-1):
+            ymin=y[iy] # lat limit 1
+            ymax=y[iy+1] # lat limit 2
+            xmin=x[ix] # long limit 1 
+            xmax=x[ix+1] # long limit 2
+            
+            LocClr=ColorVar[np.logical_and(BigLon>xmin,BigLon<xmax)]
+            LocLat=BigLat[np.logical_and(BigLon>xmin,BigLon<xmax)]
+            
+            LocClr=LocClr[np.logical_and(LocLat>ymin,LocLat<ymax)]
+            LocClr=LocClr[np.logical_and(LocClr>bin_min,LocClr<bin_max)]
+
+#            LocClr=ColorVar[BigLon[:]>xmin]
+#            LocLat=BigLat[BigLon[:]>xmin]
+#            LocLon=BigLon[BigLon[:]>xmin]
+#
+#            LocClr=LocClr[LocLon[:]<xmin]
+#            LocLat=LocLat[LocLon[:]<xmax]
+#            LocLon=LocLon[LocLon[:]<xmax]
+#
+#            LocClr=LocClr[LocLat[:]>ymin]
+#            LocLat=LocLat[LocLat[:]>ymin]
+#
+#            LocClr=LocClr[LocLat[:]<ymax]
+
+            #LocClr=LocClr[LocClR[:]>bin_min]
+            #LocClr=LocClr[LocClR[:]<bin_max]
+
+            if len(LocClr)>0:
+               TotCount[iy,ix]=len(LocClr)
+               MeanClr[iy,ix]=LocClr.mean()
+               print indc,'of',(nx*ny),'val:',TotCount[iy,ix]
+            else:
+               print indc,'of',(nx*ny),'val: empty'
+            indc=indc+1
+
+    return TotCount,MeanClr,x,y
+
+
+def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     
-    """--------------------------------------------------"""
-    # Var_list=['pickup_time_hr','dist_mi','speed_mph','psgger','fare',
-    #           'tips','payment_type']
-     
-
-    bin_varname = 'speed_mph' # the variable to bin 
-#    bin_varname = 'psgger' # the variable to bin 
-    time_b = np.linspace(0,24,150) # time bin edges
-    
-    bin_inst=binned_variable(bin_varname,time_b,1,60)
+    bin_inst=binned_variable(bin_varname,time_b,VarMin,VarMax)
     bin_inst.bin_the_values(VarBig,Var_list)
 
     # all values, limited by min,max
@@ -273,3 +344,78 @@ if __name__ == '__main__':
     
     
     #np.savetxt(write_dir+'/Vars.txt', Vars, delimiter=',')
+
+def plt_map(Zvar,minZ,maxZ,x,y):
+    plt.figure()
+
+    # mask the variable
+    Z = Zvar
+    #Z = np.ma.masked_array(Zvar,mask = (Zvar>minZ))
+    #Z = np.ma.masked_array(Z,mask = (Z<maxZ))
+    #cm.hot.set_bad('black', alpha=None)
+    
+    # cell edges
+    [Xgrid,Ygrid]=np.meshgrid(x,y) 
+
+    # cell centers
+    xc = (x[0:x.size-1]+x[1:x.size])/2
+    yc = (y[0:y.size-1]+y[1:y.size])/2
+    [Xgridc,Ygridc]=np.meshgrid(xc,yc)
+
+    pcol=plt.pcolormesh(Xgrid,Ygrid,Z,cmap=cm.hot,linewidth=0)
+    pcol.set_edgecolor('face')
+    plt.clim(minZ,maxZ)
+    plt.colorbar()
+    
+    # scatter plot
+    #nconts=300
+    #Z=np.multiply(TaxiCount,TaxiCount>minTax)
+    #Z=np.multiply(Z,Z<maxTax)
+    #plt.scatter(Xgridc,Ygridc,c=Z,s=100,cmap=cm.hot,edgecolors=None,linewidths=0)
+    #plt.clim(minTax,maxTax)
+    #plt.colorbar()
+    
+    # contour plot
+    #plt.subplot(1,2,1)
+    #nconts=400
+    #plt.contourf(Xgridc,Ygridc,TaxiCount,nconts,cmap=cm.hot)
+    #plt.contourf(Xgridc,Ygridc,TaxiCount,nconts,cmap=cm.hot)
+    #plt.clim(minTax,maxTax)
+    #plt.colorbar()
+    
+    # log plot
+    #nconts=300
+    #plt.subplot(1,2,2)
+    #plt.contourf(Xgridc,Ygridc,np.log10(TaxiCount),nconts,cmap=cm.hot)
+    #plt.clim(np.log10(minTax),np.log10(maxTax))
+    #plt.colorbar()
+    
+    plt.show()
+
+""" END OF PLOTTING FUNCTIONS """
+
+if __name__ == '__main__':
+    # the directory with the data
+    #dir_base='../data_full_textdata/'
+    dir_base='../data_full_textdata/sub_sampling_16/'
+
+    # read in all the data! 
+    VarBig,Var_list=read_taxi_files(dir_base)
+    
+    """--------------------------------------------------"""
+    #Var_list=['pickup_time_hr','dist_mi','speed_mph','psgger','fare',
+    #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
+    #          'drop_lat']
+     
+
+    FareCount,FareMean,Farex,Farey=map_proc(VarBig,Var_list,'fare',1,100,'True',50,80)
+
+    plt_map(FareCount,1,FareCount.max(),Farex,Farey)
+
+    bin_varname = 'speed_mph' # the variable to bin 
+    time_b = np.linspace(0,24,150) # time bin edges
+    plt_two_d_histogram(bin_varname,1,60,time_b,VarBig,Var_list)
+  
+
+#    bin_varname = 'psgger' # the variable to bin 
+
