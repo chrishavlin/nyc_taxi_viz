@@ -245,22 +245,6 @@ def map_proc(VarBig,Var_list,bin_varname,bin_min,bin_max,Pickup,nx,ny,
             LocClr=LocClr[np.logical_and(LocLat>ymin,LocLat<ymax)]
             LocClr=LocClr[np.logical_and(LocClr>bin_min,LocClr<bin_max)]
 
-#            LocClr=ColorVar[BigLon[:]>xmin]
-#            LocLat=BigLat[BigLon[:]>xmin]
-#            LocLon=BigLon[BigLon[:]>xmin]
-#
-#            LocClr=LocClr[LocLon[:]<xmin]
-#            LocLat=LocLat[LocLon[:]<xmax]
-#            LocLon=LocLon[LocLon[:]<xmax]
-#
-#            LocClr=LocClr[LocLat[:]>ymin]
-#            LocLat=LocLat[LocLat[:]>ymin]
-#
-#            LocClr=LocClr[LocLat[:]<ymax]
-
-            #LocClr=LocClr[LocClR[:]>bin_min]
-            #LocClr=LocClr[LocClR[:]<bin_max]
-
             if len(LocClr)>0:
                TotCount[iy,ix]=len(LocClr)
                MeanClr[iy,ix]=LocClr.mean()
