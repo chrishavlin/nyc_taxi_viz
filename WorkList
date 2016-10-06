@@ -1,7 +1,7 @@
 To do: 
 
-re-write the plotting routines to be more pythonic. based on taxi_covariance.py?
-
 delete bad .py files after plotting works. 
 
 write driver scripts calling the main module to plot different things. 
+
+write new python module for plotting routines
