@@ -107,6 +107,10 @@ def map_proc(VarBig,Var_list,bin_varname,bin_min,bin_max,Pickup,nx,ny,
     x=np.linspace(bottom_left[1],bottom_right[1],nx) # defined on cell corners
     y=np.linspace(bottom_left[0],top_left[0],ny) # defined on cell corners
 
+    # cell center grid
+    xc=(x[0:x.size-1]+x[1:x.size])/2
+    yc=(y[0:y.size-1]+y[1:y.size])/2
+
     # create an empty TaxiCount array 
     TotCount=np.zeros((ny-1,nx-1)) # defined on cell centers
     MeanClr=np.zeros((ny-1,nx-1)) # defined on cell centers
@@ -122,27 +126,56 @@ def map_proc(VarBig,Var_list,bin_varname,bin_min,bin_max,Pickup,nx,ny,
     ColorVar= VarBig[:,Var_list.index(bin_varname)]
     indc=1
 
-    # count the number of points within each lat/lon bin
-    for ix in range(nx-1):
-        for iy in range(ny-1):
-            ymin=y[iy] # lat limit 1
-            ymax=y[iy+1] # lat limit 2
-            xmin=x[ix] # long limit 1 
-            xmax=x[ix+1] # long limit 2
-            
-            LocClr=ColorVar[np.logical_and(BigLon>xmin,BigLon<xmax)]
-            LocLat=BigLat[np.logical_and(BigLon>xmin,BigLon<xmax)]
-            
-            LocClr=LocClr[np.logical_and(LocLat>ymin,LocLat<ymax)]
-            LocClr=LocClr[np.logical_and(LocClr>bin_min,LocClr<bin_max)]
+#    # count the number of points within each lat/lon bin
+#    for ix in range(nx-1):
+#        for iy in range(ny-1):
+#            ymin=y[iy] # lat limit 1
+#            ymax=y[iy+1] # lat limit 2
+#            xmin=x[ix] # long limit 1 
+#            xmax=x[ix+1] # long limit 2
+#            
+#            LocClr=ColorVar[np.logical_and(BigLon>xmin,BigLon<xmax)]
+#            LocLat=BigLat[np.logical_and(BigLon>xmin,BigLon<xmax)]
+#            
+#            LocClr=LocClr[np.logical_and(LocLat>ymin,LocLat<ymax)]
+#            LocClr=LocClr[np.logical_and(LocClr>bin_min,LocClr<bin_max)]
+#
+#            if len(LocClr)>0:
+#               TotCount[iy,ix]=len(LocClr)
+#               MeanClr[iy,ix]=LocClr.mean()
+#               #print indc,'of',(nx*ny),'val:',TotCount[iy,ix]
+#            #else:
+#            #   #print indc,'of',(nx*ny),'val: empty'
+#            indc=indc+1
 
-            if len(LocClr)>0:
-               TotCount[iy,ix]=len(LocClr)
-               MeanClr[iy,ix]=LocClr.mean()
-               #print indc,'of',(nx*ny),'val:',TotCount[iy,ix]
-            #else:
-            #   #print indc,'of',(nx*ny),'val: empty'
-            indc=indc+1
+    # count, but loop over variable
+    nV = ColorVar.size
+    dx = abs(xc[1]-xc[0])
+    dy = abs(yc[1]-yc[0])
+    prevprog=0
+    print 'Binning',bin_varname,', with Nvar=',nV
+    for iV in range(nV-1):
+        prog= round(float(iV) / float(nV-1) * 100)
+        
+        if prog % 5 == 0 and prog != prevprog:
+           print '    ',int(prog),'% complete ...'
+           prevprog=prog
+
+        if ColorVar[iV]>bin_min and ColorVar[iV]<bin_max:
+           xi=BigLon[iV] 
+           yi=BigLat[iV]
+           i_y=np.where(abs(yi-yc)<dy/2.0)
+           i_x=np.where(abs(xi-xc)<dx/2.0)
+           
+           if i_y[0].size==1 and i_x[0].size==1:
+              TotCount[i_y[0],i_x[0]]=TotCount[i_y[0],i_x[0]]+1
+              MeanClr[i_y[0],i_x[0]]=MeanClr[i_y[0],i_x[0]]+ColorVar[iV]
+
+    non0=np.where(TotCount>0)
+    if non0[0].size>0:
+       MeanClr[non0]=np.divide(MeanClr[non0],TotCount[non0])
+
+    print 'Completed binning of ',bin_varname
 
     return TotCount,MeanClr,x,y
 
@@ -220,8 +253,14 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     
     #np.savetxt(write_dir+'/Vars.txt', Vars, delimiter=',')
 
-def plt_map(Zvar,minZ,maxZ,x,y):
+def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False):
     plt.figure()
+
+
+    if LogPlot==True:
+       Zvar = np.log10(Zvar)
+       minZ = np.log10(minZ)
+       maxZ = np.log10(maxZ)
 
     # mask the variable
     Z = Zvar

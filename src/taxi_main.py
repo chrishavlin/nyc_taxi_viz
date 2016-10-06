@@ -56,11 +56,13 @@ def read_all_variables(f,there_is_a_header):
         line = line.split(',')
         if len(line) == 19:
 	 # pickup time
-	   pickup=line[1] # datetime string
-	   pickup=pickup.split() # remove the space
-	   pickup=pickup[1] # take time only (date is pickup[0])
-	   t_hms=pickup.split(':')
+	   pickup=line[1].split()[1] # splits date-time string at the space, takes
+	                             # the element that is the time string
+	   t_hms=pickup.split(':') # splits into hours, min, sec
 	   pickup_time=float(t_hms[0])+float(t_hms[1])/60+float(t_hms[2])/3600
+
+	 # pickup date
+	   date=line[1].split()[0] # the date string, "yyyy-mm-dd"
 
          # dropoff time
 	   drop=line[2] # datetime string
@@ -117,8 +119,8 @@ def read_taxi_files(dir_base):
             flnm=dir_base + fn                  # construct the file name
             print 'Reading File ', ifile,' of ', N_files
     
-            fle = open(flnm, 'r')               # open the file for reading
             start = time.clock()                # start timer
+            fle = open(flnm, 'r')               # open the file for reading
     
           # distribute current file to lat/lon bins:
             VarChunk,Var_list=read_all_variables(fle,True) 
@@ -150,8 +152,9 @@ def read_taxi_files(dir_base):
 
 if __name__ == '__main__':
     # the directory with the data
-    #dir_base='../data_full_textdata/'
-    dir_base='../data_full_textdata/sub_sampling_16/'
+    dir_base='../data_full_textdata/'
+    #dir_base='../data_full_textdata/sub_sampling_16/'
+    #dir_base='../full_csv_files/'
 
     # read in all the data! 
     VarBig,Var_list=read_taxi_files(dir_base)
@@ -160,28 +163,14 @@ if __name__ == '__main__':
     #Var_list=['pickup_time_hr','dist_mi','speed_mph','psgger','fare',
     #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
     #          'drop_lat']
-     
 
-    FareCount,FareMean,Farex,Farey=tpm.map_proc(VarBig,Var_list,'fare',1,100,'True',5,10)
+    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,30,'True',600,700)
 
-    tpm.plt_map(FareCount,1,FareCount.max(),Farex,Farey)
+    DistMean = DistMean * (DistCount > 10)
+    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
+    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
 
     bin_varname = 'speed_mph' # the variable to bin 
     time_b = np.linspace(0,24,10) # time bin edges
     tpm.plt_two_d_histogram(bin_varname,1,60,time_b,VarBig,Var_list)
   
-
-#    bin_varname = 'psgger' # the variable to bin 
-
-# useful things
-    # wall street extent
-    #bottom_left=[40.701035, -74.022382]
-    #top_left=[40.715075, -74.022382]
-    #bottom_right=[40.701035, -74.000207]
-    #top_right=[40.715075, -74.000207]
-    
-    # columbus circle extent
-    #bottom_left=[40.765505, -73.985891]
-    #top_left=[40.770369, -73.985891]
-    #bottom_right=[40.765505,-73.978744]
-    #top_right=[40.770369,-73.978744]

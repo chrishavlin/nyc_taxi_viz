@@ -1,7 +1,8 @@
 To do: 
 
+add back a bin-while reading option: three full csv files uses 30-50% memory!
+
 delete bad .py files after plotting works. 
 
 write driver scripts calling the main module to plot different things. 
 
-write new python module for plotting routines
