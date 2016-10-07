@@ -117,11 +117,11 @@ def map_proc(VarBig,Var_list,bin_varname,bin_min,bin_max,Pickup,nx,ny,
 
     # pull out lat/lon and variable lists depending on pickup or dropoff
     if Pickup:
-       BigLat=VarBig[:,8] 
-       BigLon=VarBig[:,7] 
+       BigLat=VarBig[:,Var_list.index('pickup_lat')] 
+       BigLon=VarBig[:,Var_list.index('pickup_lon')] 
     else:
-       BigLat=VarBig[:,10] 
-       BigLon=VarBig[:,9] 
+       BigLat=VarBig[:,Var_list.index('drop_lat')] 
+       BigLon=VarBig[:,Var_list.index('drop_lon')] 
 
     ColorVar= VarBig[:,Var_list.index(bin_varname)]
     indc=1
