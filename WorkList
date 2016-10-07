@@ -6,3 +6,5 @@ delete bad .py files after plotting works.
 
 write driver scripts calling the main module to plot different things. 
 
+IMPORTANT: change map_proc so that multiple variables can be binned seimultaneously! Don't want to re-run the binning function every time. Will slow way down.
+

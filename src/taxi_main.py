@@ -35,7 +35,7 @@ def read_all_variables(f,there_is_a_header,VarImportList):
         indx=indx+1
     if there_is_a_header:
         indx = indx-1
-
+    Nlines = indx
 #   Initizialize Variable Array and List
     Vars=np.zeros((indx,len(VarImportList)))
     Var_list=[None] * len(VarImportList)
@@ -48,10 +48,18 @@ def read_all_variables(f,there_is_a_header,VarImportList):
     indx=0
 
 #   loop over lines, store variables
+    prevprog=0
     for line in f:
+
+        prog= round(float(indx) / float(Nlines-1) * 100)
+        if prog % 5 == 0 and prog != prevprog and Nlines > 500:
+           print '    ',int(prog),'% of file read ...'
+           prevprog=prog
+
         line = line.rstrip()
         line = line.split(',')
-        var_indx = 0
+
+        var_indx = 0        
         if len(line) == 19:
 
            if 'pickup_time_hr' in VarImportList:
@@ -85,8 +93,8 @@ def read_all_variables(f,there_is_a_header,VarImportList):
               pickup=datetime_string_to_time(line[1],'min')
               drop=datetime_string_to_time(line[2],'min')
               dist=float(line[4]) # [mi]
-	      if (drop_time-pickup_time) > 0:
-                   speed=dist / (drop_time - pickup_time) # [mi/hr]
+	      if (drop-pickup) > 0:
+                   speed=dist / (drop - pickup) # [mi/hr]
 	      else:
 	           speed=0
               Vars[indx,var_indx]=speed
@@ -226,32 +234,43 @@ def read_gridded_file(read_dir,Varname):
 if __name__ == '__main__':
     # the directory with the data
     # dir_base='../data_full_textdata/'
-    dir_base='../data_full_textdata/sub_sampling_16/'
-    #dir_base='../full_csv_files/'
+    #dir_base='../data_full_textdata/sub_sampling_16/'
+    dir_base='../full_csv_files/'
 
     # choose which variables to import
     # possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
     #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
     #          'drop_lat','elapsed_time_min'
 
-    Vars_To_Import=['dist_mi','pickup_lon','pickup_lat']
+    Vars_To_Import=['dist_mi','pickup_lon','pickup_lat']#,'speed_mph','fare']
 
     # read in all the data! 
     VarBig,Var_list=read_taxi_files(dir_base,Vars_To_Import)
     
     # now bin the point data!
-    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,30,'True',600,700)
-    write_gridded_file('../data_products',DistMean,DistCount,Distx,Disty,'dist_mi')   
+#    Vars_To_Bin = Vars_To_Import # maybe we don't want to bin 'em all?
+#    # need a list of cutoff values...
 
-    DistMean = DistMean * (DistCount > 10)
-    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
-    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
+    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,60,'True',600,700)
+    write_gridded_file('../data_products/three_month',DistMean,DistCount,Distx,Disty,'dist_mi')   
+#    write_gridded_file('../data_products/',DistMean,DistCount,Distx,Disty,'dist_mi')   
 
-    # load and plot
-    DistMean,DistCount,Distx,Disty=read_gridded_file('../data_products','dist_mi')   
-    DistMean = DistMean * (DistCount > 10)
-    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
-    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
+#    SpedCount,SpedMean,Spedx,Spedy=tpm.map_proc(VarBig,Var_list,'speed_mph',0.1,60,'True',600,700)
+#    write_gridded_file('../data_products/',SpedMean,SpedCount,Spedx,Spedy,'speed_mph')   
+
+#    FareCount,FareMean,Farex,Farey=tpm.map_proc(VarBig,Var_list,'fare',0.5,70,'True',600,700)
+#    write_gridded_file('../data_products/',FareMean,FareCount,Farex,Farey,'speed_mph')   
+
+
+#    DistMean = DistMean * (DistCount > 10)
+#    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
+#    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
+
+#    # load and plot
+#    DistMean,DistCount,Distx,Disty=read_gridded_file('../data_products','dist_mi')   
+#    DistMean = DistMean * (DistCount > 10)
+#    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
+#    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
 
 
 
