@@ -197,7 +197,27 @@ def read_taxi_files(dir_base,Vars_To_Import):
 
     return VarBig,Var_list
 
-#def write_out_processed_file():   
+def write_gridded_file(write_dir,Var,VarCount,x,y,Varname):   
+
+    if not os.path.exists(write_dir):
+       os.makedirs(write_dir)
+
+    f_base=write_dir+'/'+Varname
+    np.savetxt(f_base +'.txt', Var, delimiter=',')
+    np.savetxt(f_base +'_Count.txt', VarCount, delimiter=',')
+    np.savetxt(f_base+'_x.txt', x, delimiter=',')
+    np.savetxt(f_base+'_y.txt', y, delimiter=',')
+
+def read_gridded_file(read_dir,Varname):   
+
+    f_base=read_dir+'/'+Varname
+    Var=np.loadtxt(f_base +'.txt',delimiter=',')
+    VarCount=np.loadtxt(f_base +'_Count.txt',delimiter=',')
+    x=np.loadtxt(f_base+'_x.txt',delimiter=',')
+    y=np.loadtxt(f_base+'_y.txt',delimiter=',')
+
+    return Var,VarCount,x,y
+
 
 #def read_in_processed_file():
 
@@ -214,10 +234,6 @@ if __name__ == '__main__':
     #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
     #          'drop_lat','elapsed_time_min'
 
-#     Vars_To_Import=['pickup_time_hr','dist_mi','speed_mph','psgger','fare',
-#              'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
-#              'drop_lat']
-
     Vars_To_Import=['dist_mi','pickup_lon','pickup_lat']
 
     # read in all the data! 
@@ -225,9 +241,19 @@ if __name__ == '__main__':
     
     # now bin the point data!
     DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,30,'True',600,700)
+    write_gridded_file('../data_products',DistMean,DistCount,Distx,Disty,'dist_mi')   
+
     DistMean = DistMean * (DistCount > 10)
     tpm.plt_map(DistMean,1,10,Distx,Disty,False)
     tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
+
+    # load and plot
+    DistMean,DistCount,Distx,Disty=read_gridded_file('../data_products','dist_mi')   
+    DistMean = DistMean * (DistCount > 10)
+    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
+    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
+
+
 
 #    bin_varname = 'speed_mph' # the variable to bin 
 #    time_b = np.linspace(0,24,10) # time bin edges
