@@ -253,9 +253,11 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     
     #np.savetxt(write_dir+'/Vars.txt', Vars, delimiter=',')
 
-def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False):
-    plt.figure()
+def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename=' ',
+            dim_x_in=4,dim_y_in=6,figdpi=180):
 
+    fig=plt.figure()
+    fig.set_size_inches(dim_x_in,dim_y_in,forward=True)
 
     if LogPlot==True:
        Zvar = np.log10(Zvar)
@@ -264,46 +266,24 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False):
 
     # mask the variable
     Z = Zvar
-    #Z = np.ma.masked_array(Zvar,mask = (Zvar>minZ))
-    #Z = np.ma.masked_array(Z,mask = (Z<maxZ))
-    #cm.hot.set_bad('black', alpha=None)
     
     # cell edges
     [Xgrid,Ygrid]=np.meshgrid(x,y) 
 
-    # cell centers
+    # get cell centers and make the meshgrid
     xc = (x[0:x.size-1]+x[1:x.size])/2
     yc = (y[0:y.size-1]+y[1:y.size])/2
     [Xgridc,Ygridc]=np.meshgrid(xc,yc)
 
+    # now plot it!
     pcol=plt.pcolormesh(Xgrid,Ygrid,Z,cmap=cm.hot,linewidth=0)
     pcol.set_edgecolor('face')
     plt.clim(minZ,maxZ)
     plt.colorbar()
     
-    # scatter plot
-    #nconts=300
-    #Z=np.multiply(TaxiCount,TaxiCount>minTax)
-    #Z=np.multiply(Z,Z<maxTax)
-    #plt.scatter(Xgridc,Ygridc,c=Z,s=100,cmap=cm.hot,edgecolors=None,linewidths=0)
-    #plt.clim(minTax,maxTax)
-    #plt.colorbar()
-    
-    # contour plot
-    #plt.subplot(1,2,1)
-    #nconts=400
-    #plt.contourf(Xgridc,Ygridc,TaxiCount,nconts,cmap=cm.hot)
-    #plt.contourf(Xgridc,Ygridc,TaxiCount,nconts,cmap=cm.hot)
-    #plt.clim(minTax,maxTax)
-    #plt.colorbar()
-    
-    # log plot
-    #nconts=300
-    #plt.subplot(1,2,2)
-    #plt.contourf(Xgridc,Ygridc,np.log10(TaxiCount),nconts,cmap=cm.hot)
-    #plt.clim(np.log10(minTax),np.log10(maxTax))
-    #plt.colorbar()
-    
-    plt.show()
+    if ShowFig:
+      print 'close figure to continue...'
+      plt.show()
 
-
+    if SaveFig:
+      fig.savefig(savename+'.png',format='png', dpi=figdpi)

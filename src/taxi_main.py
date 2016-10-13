@@ -234,7 +234,7 @@ def read_gridded_file(read_dir,Varname):
 if __name__ == '__main__':
     # the directory with the data
     # dir_base='../data_full_textdata/'
-    #dir_base='../data_full_textdata/sub_sampling_16/'
+   # dir_base='../data_full_textdata/sub_sampling_16/'
     dir_base='../full_csv_files/'
 
     # choose which variables to import
@@ -242,35 +242,34 @@ if __name__ == '__main__':
     #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
     #          'drop_lat','elapsed_time_min'
 
-    Vars_To_Import=['dist_mi','pickup_lon','pickup_lat']#,'speed_mph','fare']
+    Vars_To_Import=['dist_mi','pickup_lon','pickup_lat','speed_mph','fare']
 
     # read in all the data! 
     VarBig,Var_list=read_taxi_files(dir_base,Vars_To_Import)
     
     # now bin the point data!
 #    Vars_To_Bin = Vars_To_Import # maybe we don't want to bin 'em all?
-#    # need a list of cutoff values...
+    # need a list of cutoff values...
 
-    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,60,'True',600,700)
-    write_gridded_file('../data_products/three_month',DistMean,DistCount,Distx,Disty,'dist_mi')   
-#    write_gridded_file('../data_products/',DistMean,DistCount,Distx,Disty,'dist_mi')   
+#    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,60,'True',600,700)
+#    write_gridded_file('../data_products/three_month',DistMean,DistCount,Distx,Disty,'dist_mi')   
+#    write_gridded_file('../data_products/test',DistMean,DistCount,Distx,Disty,'dist_mi')   
 
-#    SpedCount,SpedMean,Spedx,Spedy=tpm.map_proc(VarBig,Var_list,'speed_mph',0.1,60,'True',600,700)
-#    write_gridded_file('../data_products/',SpedMean,SpedCount,Spedx,Spedy,'speed_mph')   
+    SpedCount,SpedMean,Spedx,Spedy=tpm.map_proc(VarBig,Var_list,'speed_mph',0.1,60,'True',600,700)
+    write_gridded_file('../data_products/three_month',SpedMean,SpedCount,Spedx,Spedy,'speed_mph')   
 
-#    FareCount,FareMean,Farex,Farey=tpm.map_proc(VarBig,Var_list,'fare',0.5,70,'True',600,700)
-#    write_gridded_file('../data_products/',FareMean,FareCount,Farex,Farey,'speed_mph')   
-
+    #FareCount,FareMean,Farex,Farey=tpm.map_proc(VarBig,Var_list,'fare',0.5,70,'True',600,700)
+    #write_gridded_file('../data_products/test',FareMean,FareCount,Farex,Farey,'fare')   
 
 #    DistMean = DistMean * (DistCount > 10)
 #    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
 #    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
 
 #    # load and plot
-#    DistMean,DistCount,Distx,Disty=read_gridded_file('../data_products','dist_mi')   
+#    DistMean,DistCount,Distx,Disty=read_gridded_file('../data_products/three_month','dist_mi')   
 #    DistMean = DistMean * (DistCount > 10)
 #    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
-#    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
+#    tpm.plt_map(DistCount,2,4000,Distx,Disty,True)
 
 
 
