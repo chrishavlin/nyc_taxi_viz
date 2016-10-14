@@ -29,7 +29,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # select directory and variable
-data_dir='../data_products/three_month'
+data_dir='../data_products/sub_sampled'
 varname='dist_mi'
 
 # output figure names
@@ -60,7 +60,8 @@ Mean_vs_y = np.zeros((Vary.size,1))
 for iLat in range(0,len(Vary)-1):
     x_var=VarMean[iLat,:]
     x_var=x_var[np.where(x_var>0.1)]
-    Mean_vs_y[iLat] = np.mean(x_var)
+    if len(x_var)!=0:
+       Mean_vs_y[iLat] = np.mean(x_var)
 
 fig=plt.figure()
 plt.plot(Mean_vs_y,Vary)
@@ -70,7 +71,10 @@ axes = plt.gca()
 axes.set_ylim([Vary.min(),Vary.max()])
 axes.set_xlim([2,4.5])
 
+print '...'
+print '... close figure to continue ...'
 plt.show()
+
 
 
 
