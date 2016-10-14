@@ -1,9 +1,28 @@
-"""---------------------------------------------------------------------------
-Processes the csv taxi files. 
+""" 
+taxi_main.py
+module for loading the raw csv taxi files.
 
-(c) Chris Havlin
-Open source license?
-----------------------------------------------------------------------------"""
+Copyright (C) 2016  Chris Havlin, <https://chrishavlin.wordpress.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+
+The database is NOT distributed with the code here. 
+
+Data source:
+     NYC Taxi & Limousine Commision, TLC Trip Record Data
+     <http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml>
+"""
 
 """--------------
 Import libraries:
@@ -19,14 +38,23 @@ Functions
 ------------"""
 def read_all_variables(f,there_is_a_header,VarImportList):
     """ 
-     reads in the data
+     reads in the raw data from a single file
     
      input: 
        f                   file object
        there_is_a_header   logical flag 
+       VarImportList       a list of strings identifying which
+                           data to read in and save
+               possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
+                                   'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
+                                   'drop_lat','elapsed_time_min'
        
      output: 
-       Vars
+       Vars                a 2D array, each row is a single taxi
+                           pickup instance, each column is a different
+       Var_list            a list of strings where the index of each 
+                           entry corresponds to the column of Vars
+
     """
 
 #   count number of lines
@@ -168,7 +196,24 @@ def datetime_string_to_time(dt_string,time_units):
 
 
 def read_taxi_files(dir_base,Vars_To_Import):
-    """ reads in individual taxi file, stores variables """
+    """ loops over all taxi files in a directory, stores them in memory
+       
+        input:
+           dir_base        the directory to look for .csv taxi files
+           Vars_to_Import  a list of strings identifying which data to read in and save
+
+               possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
+                                   'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
+                                   'drop_lat','elapsed_time_min'
+       output: 
+        
+
+       VarBig          a 2D array, each row is a single taxi pickup instance, each column
+                       is a different variable. Data aggregated from all files in directory.
+       Var_list         a list of strings where the index of each entry corresponds to the 
+                        column of Vars
+    
+    """
 
     N_files=len(os.listdir(dir_base)) # number of files in directory
     ifile = 1 # file counter
@@ -206,6 +251,7 @@ def read_taxi_files(dir_base,Vars_To_Import):
     return VarBig,Var_list
 
 def write_gridded_file(write_dir,Var,VarCount,x,y,Varname):   
+    """ writes out the spatially binned data """
 
     if not os.path.exists(write_dir):
        os.makedirs(write_dir)
@@ -217,7 +263,7 @@ def write_gridded_file(write_dir,Var,VarCount,x,y,Varname):
     np.savetxt(f_base+'_y.txt', y, delimiter=',')
 
 def read_gridded_file(read_dir,Varname):   
-
+    """ reads in the spatially binned data """
     f_base=read_dir+'/'+Varname
     Var=np.loadtxt(f_base +'.txt',delimiter=',')
     VarCount=np.loadtxt(f_base +'_Count.txt',delimiter=',')
@@ -226,54 +272,27 @@ def read_gridded_file(read_dir,Varname):
 
     return Var,VarCount,x,y
 
-
-#def read_in_processed_file():
-
 """ END OF FUNCTIONS """
 
 if __name__ == '__main__':
+    """ a basic example of reading, processing and plotting some taxi files """
+
     # the directory with the data
-    # dir_base='../data_full_textdata/'
-   # dir_base='../data_full_textdata/sub_sampling_16/'
-    dir_base='../full_csv_files/'
+    dir_base='../data_sub_sampled/'
 
     # choose which variables to import
     # possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
     #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
     #          'drop_lat','elapsed_time_min'
 
-    Vars_To_Import=['dist_mi','pickup_lon','pickup_lat','speed_mph','fare']
+    Vars_To_Import=['dist_mi','pickup_lon','pickup_lat']
 
     # read in all the data! 
     VarBig,Var_list=read_taxi_files(dir_base,Vars_To_Import)
     
     # now bin the point data!
-#    Vars_To_Bin = Vars_To_Import # maybe we don't want to bin 'em all?
-    # need a list of cutoff values...
+    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,60,'True',600,700)
+    write_gridded_file('../data_products/',DistMean,DistCount,Distx,Disty,'dist_mi')   
 
-#    DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,60,'True',600,700)
-#    write_gridded_file('../data_products/three_month',DistMean,DistCount,Distx,Disty,'dist_mi')   
-#    write_gridded_file('../data_products/test',DistMean,DistCount,Distx,Disty,'dist_mi')   
+    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
 
-    SpedCount,SpedMean,Spedx,Spedy=tpm.map_proc(VarBig,Var_list,'speed_mph',0.1,60,'True',600,700)
-    write_gridded_file('../data_products/three_month',SpedMean,SpedCount,Spedx,Spedy,'speed_mph')   
-
-    #FareCount,FareMean,Farex,Farey=tpm.map_proc(VarBig,Var_list,'fare',0.5,70,'True',600,700)
-    #write_gridded_file('../data_products/test',FareMean,FareCount,Farex,Farey,'fare')   
-
-#    DistMean = DistMean * (DistCount > 10)
-#    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
-#    tpm.plt_map(DistCount,1,1000,Distx,Disty,True)
-
-#    # load and plot
-#    DistMean,DistCount,Distx,Disty=read_gridded_file('../data_products/three_month','dist_mi')   
-#    DistMean = DistMean * (DistCount > 10)
-#    tpm.plt_map(DistMean,1,10,Distx,Disty,False)
-#    tpm.plt_map(DistCount,2,4000,Distx,Disty,True)
-
-
-
-#    bin_varname = 'speed_mph' # the variable to bin 
-#    time_b = np.linspace(0,24,10) # time bin edges
-#    tpm.plt_two_d_histogram(bin_varname,1,60,time_b,VarBig,Var_list)
-  

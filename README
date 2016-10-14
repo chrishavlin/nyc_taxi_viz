@@ -1,3 +1,56 @@
-Set of python modules for reading in and visualizing NYC yellow cab data. 
+Copyright (C) 2016  Chris Havlin, <https://chrishavlin.wordpress.com>
 
-Not ready for general use... 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+DESCRIPTION 
+
+This is a set of python modules for reading in and visualizing NYC yellow cab data. 
+
+The source code is in nyc_taxi_viz/src/ and includes:
+
+taxi_main.py        the main module, contains all functions for reading and writing data. 
+taxi_plotmod.py     a module with functions for processing raw data and plotting the results
+pl_proc_raw.py      a script that processes the raw data to create a spatially binned data product
+pl_load_and_map.py  a script that loads a processed file then plots the spatially binned data
+
+DATA
+
+The data is not included here, data source:
+
+NYC Taxi & Limousine Commission - Trip Record Data
+http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml
+
+
+QUICK START STEPS
+
+1. Download data (http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml). These files are about 2 GB EACH. Just one is enough to get started... 
+
+2. (optional) pre-process the .csv file. It's a bit easier to start experimenting if you break up the giant file into more managable chunks. I did this in terminal using the bash command split:
+
+       $ split -l 5000 filename
+     
+   this while split filename into separate files, each with 5000 lines. 
+
+   Now, move some smaller number of these files into a different directory, say nyc_taxi_viz/data_sub_sampled/
+
+3. If you followed step 2, you can run taxi_main.py and it'll process and map the sub sampled data. 
+
+   If you did not follow step 2, open up taxi_main.py and set the string variable  dir_base equal to the path to the csv file that you downloaded, then run taxi_main.py
+
+   To run, open a terminal and enter
+
+   python taxi_main.py
+
+See pl_proc_raw.py and pl_load_and_map.py for more complicated examples of using the modules. 
+
