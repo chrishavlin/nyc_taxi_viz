@@ -75,9 +75,3 @@ print '...'
 print '... close figure to continue ...'
 plt.show()
 
-
-
-
-    
-
-
