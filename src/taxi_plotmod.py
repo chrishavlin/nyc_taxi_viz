@@ -256,8 +256,6 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
 def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename=' ',
             dim_x_in=4,dim_y_in=6,figdpi=180):
 
-    fig=plt.figure()
-    fig.set_size_inches(dim_x_in,dim_y_in,forward=True)
 
     if LogPlot==True:
        Zvar = np.log10(Zvar)
@@ -276,14 +274,20 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename
     [Xgridc,Ygridc]=np.meshgrid(xc,yc)
 
     # now plot it!
+    fig=plt.figure()
+    fig.set_size_inches(dim_x_in,dim_y_in,forward=True)
+
     pcol=plt.pcolormesh(Xgrid,Ygrid,Z,cmap=cm.hot,linewidth=0)
     pcol.set_edgecolor('face')
+    plt.axis('off')
     plt.clim(minZ,maxZ)
     plt.colorbar()
     
+    
+    if SaveFig:
+      fig.savefig(savename+'.png',bbox_inches='tight',format='png', dpi=figdpi)
+
     if ShowFig:
       print 'close figure to continue...'
       plt.show()
 
-    if SaveFig:
-      fig.savefig(savename+'.png',format='png', dpi=figdpi)
