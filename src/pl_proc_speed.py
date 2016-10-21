@@ -30,31 +30,79 @@ Import libraries:
 import numpy as np
 import taxi_plotmod as tpm
 import taxi_main as tm
+import matplotlib.pyplot as plt
 
 
 # the directory with the data
-dir_base='../data_sub_sampled/'
+#dir_base='../data_sub_sampled/'
+dir_base='../full_csv_files/'
 
 # choose which variables to import
 # possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
 #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
 #          'drop_lat','elapsed_time_min'
 
-Vars_To_Import=['date','pickup_time_hr','speed_mph','pickup_lon','pickup_lat']
+Vars_To_Import=['date','pickup_time_hr','elapsed_time_min','speed_mph']
 
 # read in all the data! 
 VarBig,Var_list=tm.read_taxi_files(dir_base,Vars_To_Import)
     
+# Ntaxi vs time of day single day
 
-print VarBig[0:20,Var_list.index('date_dd')]    
-print VarBig[0:20,Var_list.index('pickup_time_hr')]    
-print VarBig[0:20,Var_list.index('speed_mph')]
-## now bin the point data and save the result!
-#x_bins=600 # number of bins in x
-#y_bins=700 # number of bins in y
+ids=np.where(VarBig[:,Var_list.index('speed_mph')]<80)
+VarBig=VarBig[ids[0],:]
 
-#DistCount,DistMean,Distx,Disty=tpm.map_proc(VarBig,Var_list,'dist_mi',0.1,60,True,x_bins,y_bins)
-#tm.write_gridded_file('../data_products/sub_sampled/',DistMean,DistCount,Distx,Disty,'dist_mi')   
+date_start,date_end=tpm.min_max_date(VarBig,Var_list)
+date_select=date_start.split('-')
+print date_start,date_end
 
-#FareCount,FareMean,Farex,Farey=tpm.map_proc(VarBig,Var_list,'fare',0.1,60,True,x_bins,y_bins)
-#tm.write_gridded_file('../data_products/sub_sampled/',FareMean,FareCount,Farex,Farey,'fare')   
+date_select[2]=str(int(date_select[2])+1)
+VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
+N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
+idays=1.0
+
+for iday in range(1,30):
+    print iday
+    date_select[2]=str(int(date_select[2])+1)
+    VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
+    N_un,Speed,t_un = tpm.find_N_unique_vs_t(VarDate,Var_list)
+
+    N_unAve=N_unAve+N_un
+    SpeedAve=Speed+SpeedAve
+    idays=idays+1.0 
+
+    plt.subplot(2,1,1)
+    plt.plot(t_un,N_un)
+    plt.subplot(2,1,2)
+    plt.plot(t_un,Speed)
+
+    # remove rows already processed
+    ids=np.where(VarBig[:,Var_list.index('date_dd')]>iday)
+    VarBig=VarBig[ids[0],:]
+    print VarBig.shape
+
+SpeedAve=SpeedAve/idays
+N_unAve=N_unAve/idays
+
+plt.subplot(2,1,1)
+plt.plot(t_un,N_unAve,'k',linewidth=2.0)
+plt.subplot(2,1,2)
+plt.plot(t_un,SpeedAve,'k',linewidth=2.0)
+plt.show()
+# single day, don't need that extra info
+#Var_list_r=list(Var_list)
+#VarDate=np.delete(VarDate,0,Var_list_r.index('date_yr'))
+#Var_list_r.remove('date_yr')
+#VarDate=np.delete(VarDate,0,Var_list_r.index('date_mm'))
+#Var_list_r.remove('date_mm')
+#VarDate=np.delete(VarDate,0,Var_list_r.index('date_dd'))
+#Var_list_r.remove('date_dd')
+#
+#print Var_list
+#print Var_list_r
+
+
+plt.scatter(N_unAve,SpeedAve, c=t_un)
+plt.colorbar()
+plt.show()
+

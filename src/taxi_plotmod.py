@@ -232,6 +232,69 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename
       print 'close figure to continue...'
       plt.show()
 
+def select_data_by_date(VarBig,Var_list,yyyy,mm,dd):
+
+    if len(yyyy):
+       yyyy_i=np.where(VarBig[:,Var_list.index('date_yr')]==float(yyyy))
+       Var_date=VarBig[yyyy_i[0],:]
+    else:
+       Var_date=VarBig
+
+    if len(mm):
+       mm_i=np.where(Var_date[:,Var_list.index('date_mm')]==float(mm))
+       Var_date=Var_date[mm_i[0],:]
+
+    if len(dd):
+       dd_i=np.where(Var_date[:,Var_list.index('date_dd')]==float(dd))
+       Var_date=Var_date[dd_i[0],:]
+
+    return Var_date
+
+def min_max_date(VarBig,Var_list):    
+
+    min_yr=str(int(np.min(VarBig[:,Var_list.index('date_yr')])))
+    Var=select_data_by_date(VarBig,Var_list,min_yr,'','')
+    min_mo=str(int(np.min(Var[:,Var_list.index('date_mm')])))
+    Var=select_data_by_date(Var,Var_list,'',min_mo,'')
+    min_dd=str(int(np.min(Var[:,Var_list.index('date_dd')])))
+
+    max_yr=str(int(np.max(VarBig[:,Var_list.index('date_yr')])))
+    Var=select_data_by_date(VarBig,Var_list,max_yr,'','')
+    max_mo=str(int(np.max(Var[:,Var_list.index('date_mm')])))
+    Var=select_data_by_date(Var,Var_list,'',max_mo,'')
+    max_dd=str(int(np.max(Var[:,Var_list.index('date_dd')])))
+
+     
+    date_start=min_yr+'-'+min_mo+'-'+min_dd
+    date_end=max_yr+'-'+max_mo+'-'+max_dd
+
+    return date_start,date_end
+    
+def find_N_unique_vs_t(Var,Var_list):    
+    time_window_m=2
+    N_t=5000
+    times=np.linspace(0,24.0*60.0,N_t)
+    
+    pick=Var[:,Var_list.index('pickup_time_hr')]*60.0
+    elap=Var[:,Var_list.index('elapsed_time_min')]
+    drop=pick[:]+elap[:]
+
+    N_unique = np.zeros(times.shape)
+    Speed = np.zeros(times.shape)
+
+    for it in range(N_t):
+        current_time=times[it]
+
+        id_pickup=np.where((drop >= current_time) & (pick<=current_time))
+        
+
+        if len(id_pickup[0])>0:
+           N_unique[it]=len(id_pickup[0])
+           Speed[it]=Var[id_pickup,Var_list.index('speed_mph')].mean()
+
+    times = times/60.0
+    return N_unique,Speed,times
+
 def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     
     bin_inst=binned_variable(bin_varname,time_b,VarMin,VarMax)

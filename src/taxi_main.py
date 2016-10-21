@@ -80,6 +80,7 @@ def read_all_variables(f,there_is_a_header,VarImportList):
 
 #   loop over lines, store variables
     prevprog=0
+    zero_lines=0
     for line in f:
 
         prog= round(float(indx) / float(Nlines-1) * 100)
@@ -100,6 +101,12 @@ def read_all_variables(f,there_is_a_header,VarImportList):
 
            if 'date' in VarImportList:
               dates=line[1].split()[0].split('-') # the date string, "yyyy-mm-dd"
+              if float(dates[0])==0.0:
+                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
+                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
+                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
+                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
+                 print dates[0]
               Vars[indx,var_indx]=float(dates[0])
               Var_list[var_indx]='date_yr'
               var_indx=var_indx+1
@@ -180,6 +187,13 @@ def read_all_variables(f,there_is_a_header,VarImportList):
               var_indx=var_indx+1
 
            indx=indx+1
+        else:
+           zero_lines=zero_lines+1
+
+    
+    # remove zero lines, which will be padded at end
+    if zero_lines>0:
+       Vars=Vars[0:Nlines-zero_lines-1,:]
 
     return Vars,Var_list
 
