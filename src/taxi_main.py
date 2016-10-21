@@ -65,8 +65,11 @@ def read_all_variables(f,there_is_a_header,VarImportList):
         indx = indx-1
     Nlines = indx
 #   Initizialize Variable Array and List
-    Vars=np.zeros((indx,len(VarImportList)))
-    Var_list=[None] * len(VarImportList)
+    N_VarImport=len(VarImportList)
+    if 'date' in VarImportList:
+       N_VarImport=N_VarImport+2
+    Vars=np.zeros((indx,N_VarImport))
+    Var_list=[None] * N_VarImport
 
 #   Go back to start of file, loop again to read variables
     f.seek(0)
@@ -96,8 +99,15 @@ def read_all_variables(f,there_is_a_header,VarImportList):
               var_indx=var_indx+1
 
            if 'date' in VarImportList:
-              Vars[indx,var_indx]=line[1].split()[0] # the date string, "yyyy-mm-dd"
-              Var_list[var_indx]='date'
+              dates=line[1].split()[0].split('-') # the date string, "yyyy-mm-dd"
+              Vars[indx,var_indx]=float(dates[0])
+              Var_list[var_indx]='date_yr'
+              var_indx=var_indx+1
+              Vars[indx,var_indx]=float(dates[1])
+              Var_list[var_indx]='date_mm'
+              var_indx=var_indx+1
+              Vars[indx,var_indx]=float(dates[2])
+              Var_list[var_indx]='date_dd'
               var_indx=var_indx+1
            
            if 'dropoff_time_hr' in VarImportList:
