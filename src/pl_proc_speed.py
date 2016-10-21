@@ -40,13 +40,15 @@ dir_base='../data_sub_sampled/'
 #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
 #          'drop_lat','elapsed_time_min'
 
-Vars_To_Import=['date','speed_mph','pickup_lon','pickup_lat']
+Vars_To_Import=['date','pickup_time_hr','speed_mph','pickup_lon','pickup_lat']
 
 # read in all the data! 
 VarBig,Var_list=tm.read_taxi_files(dir_base,Vars_To_Import)
     
 
-print VarBig[0:10,0]    
+print VarBig[0:20,Var_list.index('date_dd')]    
+print VarBig[0:20,Var_list.index('pickup_time_hr')]    
+print VarBig[0:20,Var_list.index('speed_mph')]
 ## now bin the point data and save the result!
 #x_bins=600 # number of bins in x
 #y_bins=700 # number of bins in y

@@ -132,7 +132,7 @@ def read_all_variables(f,there_is_a_header,VarImportList):
               drop=datetime_string_to_time(line[2],'min')
               dist=float(line[4]) # [mi]
 	      if (drop-pickup) > 0:
-                   speed=dist / (drop - pickup) # [mi/hr]
+                   speed=dist / ((drop - pickup)/60.0) # [mi/hr]
 	      else:
 	           speed=0
               Vars[indx,var_indx]=speed
@@ -194,11 +194,11 @@ def datetime_string_to_time(dt_string,time_units):
 
     # unit conversion factors depending on time_units:
     if time_units == 'hr':
-       a = [1, 1/60, 1/3600] 
+       a = [1.0, 1.0/60, 1.0/3600] 
     elif time_units == 'min':
-       a = [60, 1, 1/60] 
+       a = [60.0, 1.0, 1.0/60] 
     elif time_units == 'sec':
-       a = [3600, 60, 1] 
+       a = [3600.0, 60.0, 1.0] 
 
     time_flt=float(t_hms[0])*a[0]+float(t_hms[1])*a[1]+float(t_hms[2])*a[2]
 
