@@ -208,9 +208,9 @@ def datetime_string_to_time(dt_string,time_units):
 
     # unit conversion factors depending on time_units:
     if time_units == 'hr':
-       a = [1.0, 1.0/60, 1.0/3600] 
+       a = [1.0, 1.0/60.0, 1.0/3600.0] 
     elif time_units == 'min':
-       a = [60.0, 1.0, 1.0/60] 
+       a = [60.0, 1.0, 1.0/60.0] 
     elif time_units == 'sec':
        a = [3600.0, 60.0, 1.0] 
 

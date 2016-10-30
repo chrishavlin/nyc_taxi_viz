@@ -42,23 +42,42 @@ dir_base='../full_csv_files/'
 #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
 #          'drop_lat','elapsed_time_min'
 
-Vars_To_Import=['date','pickup_time_hr','elapsed_time_min','speed_mph']
-
-# read in all the data! 
+#Vars_To_Import=['date','pickup_time_hr','elapsed_time_min','speed_mph']
+Vars_To_Import=['date','elapsed_time_min','pickup_time_hr','speed_mph']
 VarBig,Var_list=tm.read_taxi_files(dir_base,Vars_To_Import)
-    
-# Ntaxi vs time of day single day
+Pickups=VarBig[:,Var_list.index('pickup_time_hr')]
+Speed=VarBig[:,Var_list.index('speed_mph')]
 
-ids=np.where(VarBig[:,Var_list.index('speed_mph')]<80)
+#plt.subplot(1,2,1)
+#plt.hist(Pickups,bins=24,label='full set',histtype='step')
+#ids=np.where((VarBig[:,Var_list.index('speed_mph')]<80) &
+#              (VarBig[:,Var_list.index('speed_mph')]>0))
+#plt.hist(Pickups[ids[0]],bins=24,label='limited set (0 < speed < 80)',histtype='step')
+#
+#plt.subplot(1,2,2)
+#plt.hist(Speed,bins=20,label='full set',histtype='step',range=(-10,80))
+#plt.hist(Speed[ids[0]],bins=20,label='limited set',histtype='step')
+#plt.show()
+    
+
+## Ntaxi vs time of day single day
+#
+ids=np.where((VarBig[:,Var_list.index('speed_mph')]<80) & 
+              (VarBig[:,Var_list.index('speed_mph')]>0))
 VarBig=VarBig[ids[0],:]
 
+print VarBig[:,Var_list.index('speed_mph')].max()
+print VarBig[:,Var_list.index('speed_mph')].min()
+#
 date_start,date_end=tpm.min_max_date(VarBig,Var_list)
 date_select=date_start.split('-')
 print date_start,date_end
-
+#
 date_select[2]=str(int(date_select[2])+1)
 VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
 N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
+
+
 idays=1.0
 
 for iday in range(1,30):
@@ -73,8 +92,11 @@ for iday in range(1,30):
 
     plt.subplot(2,1,1)
     plt.plot(t_un,N_un)
+    plt.xlim((21,24.25))
     plt.subplot(2,1,2)
     plt.plot(t_un,Speed)
+    plt.xlim((21,24.25))
+    plt.pause(0.5)
 
     # remove rows already processed
     ids=np.where(VarBig[:,Var_list.index('date_dd')]>iday)

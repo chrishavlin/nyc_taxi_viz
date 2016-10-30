@@ -272,11 +272,11 @@ def min_max_date(VarBig,Var_list):
     
 def find_N_unique_vs_t(Var,Var_list):    
     time_window_m=2
-    N_t=5000
-    times=np.linspace(0,24.0*60.0,N_t)
+    N_t=200
+    times=np.linspace(0,25.0,N_t)
     
-    pick=Var[:,Var_list.index('pickup_time_hr')]*60.0
-    elap=Var[:,Var_list.index('elapsed_time_min')]
+    pick=Var[:,Var_list.index('pickup_time_hr')]
+    elap=Var[:,Var_list.index('elapsed_time_min')]/60.0
     drop=pick[:]+elap[:]
 
     N_unique = np.zeros(times.shape)
@@ -292,7 +292,7 @@ def find_N_unique_vs_t(Var,Var_list):
            N_unique[it]=len(id_pickup[0])
            Speed[it]=Var[id_pickup,Var_list.index('speed_mph')].mean()
 
-    times = times/60.0
+#    times = times
     return N_unique,Speed,times
 
 def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
