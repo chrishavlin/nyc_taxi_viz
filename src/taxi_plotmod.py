@@ -271,26 +271,48 @@ def min_max_date(VarBig,Var_list):
     return date_start,date_end
     
 def find_N_unique_vs_t(Var,Var_list):    
-    time_window_m=2
     N_t=200
-    times=np.linspace(0,25.0,N_t)
+    times=np.linspace(0,24.0,N_t)
     
     pick=Var[:,Var_list.index('pickup_time_hr')]
     elap=Var[:,Var_list.index('elapsed_time_min')]/60.0
     drop=pick[:]+elap[:]
 
+    bb=np.where(drop>23.9)
+    bb=np.where(pick<0.2)
+    print 'min:',pick.min(),drop.min()
+    print 'max:',pick.max(),drop.max()
+    print 'min/max elap:',elap.min(),elap.max()
+
     N_unique = np.zeros(times.shape)
     Speed = np.zeros(times.shape)
 
-    for it in range(N_t):
+    for it in range(0,N_t,1):
         current_time=times[it]
 
-        id_pickup=np.where((drop >= current_time) & (pick<=current_time))
-        
+        drop2=np.empty_like(drop)
+        pick2=np.empty_like(pick)
+        drop2[:]=drop
+        pick2[:]=pick
+        #if current_time<2.0:
+        #   pick2[np.where(drop2 >= 23)[0]]=pick2[np.where(drop2 >= 23)[0]]-24.0
+        #   drop2[np.where(drop2 >= 23)[0]]=drop2[np.where(drop2 >= 23)[0]]-24.0
+        #if current_time>22.0: 
+        #   id_2=np.where(drop2<=2.0)
+        #   pick2[id_2[0]]=pick2[id_2[0]]+24.0
+        #   drop2[id_2[0]]=drop2[id_2[0]]+24.0
+
+        id_pickup=np.where((drop2 >= current_time) & (pick2<=current_time))
 
         if len(id_pickup[0])>0:
            N_unique[it]=len(id_pickup[0])
-           Speed[it]=Var[id_pickup,Var_list.index('speed_mph')].mean()
+           Speed[it]=Var[id_pickup[0],Var_list.index('speed_mph')].mean()
+
+    print times[0],times[N_t-1]
+    print N_unique[0],N_unique[N_t-1]
+    print times[1],times[N_t-2]
+    print N_unique[1],N_unique[N_t-2]
+        
 
 #    times = times
     return N_unique,Speed,times

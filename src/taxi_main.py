@@ -128,9 +128,14 @@ def read_all_variables(f,there_is_a_header,VarImportList):
               var_indx=var_indx+1
               
            if 'elapsed_time_min' in VarImportList:
-              pickup=datetime_string_to_time(line[1],'min')
-              drop=datetime_string_to_time(line[2],'min')
-              Vars[indx,var_indx]=drop - pickup
+              pickup=datetime_string_to_time(line[1],'hr')*60.0
+              drop=datetime_string_to_time(line[2],'hr')*60.0
+              if drop >= pickup:
+                 Vars[indx,var_indx]=drop - pickup
+              elif drop < pickup:
+                 #print 'whoops:',pickup/60,drop/60,(drop+24*60.-pickup)/60
+                 Vars[indx,var_indx]=drop+24.0*60.0 - pickup
+                 
               Var_list[var_indx]='elapsed_time_min'
               var_indx=var_indx+1
 
@@ -138,9 +143,12 @@ def read_all_variables(f,there_is_a_header,VarImportList):
               pickup=datetime_string_to_time(line[1],'min')
               drop=datetime_string_to_time(line[2],'min')
               dist=float(line[4]) # [mi]
-	      if (drop-pickup) > 0:
+	      if drop > pickup:
                    speed=dist / ((drop - pickup)/60.0) # [mi/hr]
-	      else:
+	      elif drop < pickup:
+                   dT=(drop+24.0*60.0 - pickup)/60.0 
+                   speed=dist / dT # [mi/hr]
+              else:
 	           speed=0
               Vars[indx,var_indx]=speed
               Var_list[var_indx]='speed_mph'

@@ -45,29 +45,33 @@ dir_base='../full_csv_files/'
 #Vars_To_Import=['date','pickup_time_hr','elapsed_time_min','speed_mph']
 Vars_To_Import=['date','elapsed_time_min','pickup_time_hr','speed_mph']
 VarBig,Var_list=tm.read_taxi_files(dir_base,Vars_To_Import)
+
+# histogram of all values
 Pickups=VarBig[:,Var_list.index('pickup_time_hr')]
 Speed=VarBig[:,Var_list.index('speed_mph')]
-
-#plt.subplot(1,2,1)
-#plt.hist(Pickups,bins=24,label='full set',histtype='step')
-#ids=np.where((VarBig[:,Var_list.index('speed_mph')]<80) &
-#              (VarBig[:,Var_list.index('speed_mph')]>0))
-#plt.hist(Pickups[ids[0]],bins=24,label='limited set (0 < speed < 80)',histtype='step')
-#
-#plt.subplot(1,2,2)
-#plt.hist(Speed,bins=20,label='full set',histtype='step',range=(-10,80))
-#plt.hist(Speed[ids[0]],bins=20,label='limited set',histtype='step')
-#plt.show()
-    
-
-## Ntaxi vs time of day single day
-#
-ids=np.where((VarBig[:,Var_list.index('speed_mph')]<80) & 
+ids=np.where((VarBig[:,Var_list.index('speed_mph')]<80) &
               (VarBig[:,Var_list.index('speed_mph')]>0))
-VarBig=VarBig[ids[0],:]
 
-print VarBig[:,Var_list.index('speed_mph')].max()
-print VarBig[:,Var_list.index('speed_mph')].min()
+plt.subplot(1,3,1)
+plt.hist(Pickups[ids[0]],bins=24,label='limited set (0 < speed < 80)',histtype='step')
+plt.hist(Pickups[ids[0]],bins=240,label='limited set (0 < speed < 80)',histtype='step')
+plt.hist(Pickups[ids[0]],bins=2400,label='limited set (0 < speed < 80)',histtype='step')
+
+plt.subplot(1,3,2)
+plt.hist(Speed,bins=20,label='full set',histtype='step',range=(-10,80))
+plt.hist(Speed[ids[0]],bins=20,label='limited set',histtype='step')
+
+plt.subplot(1,3,3)
+Ela=VarBig[ids[0],Var_list.index('elapsed_time_min')]
+idA=np.where((Ela<100) & (Ela > 0))
+plt.hist(Ela[idA[0]],bins=200,label='limited set',histtype='step')
+plt.xlim(0,100)
+
+print 'shape:',VarBig.shape
+VarBig=VarBig[ids[0],:]
+print VarBig.shape
+VarBig=VarBig[np.where((Ela<2.0*60.0)&(Ela>0))[0]]
+print VarBig.shape
 #
 date_start,date_end=tpm.min_max_date(VarBig,Var_list)
 date_select=date_start.split('-')
@@ -75,56 +79,67 @@ print date_start,date_end
 #
 date_select[2]=str(int(date_select[2])+1)
 VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
-N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
+#N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
+N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarBig,Var_list)
 
+plt.subplot(1,3,1)
+plt.plot(t_unAve,N_unAve,'k')
 
-idays=1.0
-
-for iday in range(1,30):
-    print iday
-    date_select[2]=str(int(date_select[2])+1)
-    VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
-    N_un,Speed,t_un = tpm.find_N_unique_vs_t(VarDate,Var_list)
-
-    N_unAve=N_unAve+N_un
-    SpeedAve=Speed+SpeedAve
-    idays=idays+1.0 
-
-    plt.subplot(2,1,1)
-    plt.plot(t_un,N_un)
-    plt.xlim((21,24.25))
-    plt.subplot(2,1,2)
-    plt.plot(t_un,Speed)
-    plt.xlim((21,24.25))
-    plt.pause(0.5)
-
-    # remove rows already processed
-    ids=np.where(VarBig[:,Var_list.index('date_dd')]>iday)
-    VarBig=VarBig[ids[0],:]
-    print VarBig.shape
-
-SpeedAve=SpeedAve/idays
-N_unAve=N_unAve/idays
-
-plt.subplot(2,1,1)
-plt.plot(t_un,N_unAve,'k',linewidth=2.0)
-plt.subplot(2,1,2)
-plt.plot(t_un,SpeedAve,'k',linewidth=2.0)
-plt.show()
-# single day, don't need that extra info
-#Var_list_r=list(Var_list)
-#VarDate=np.delete(VarDate,0,Var_list_r.index('date_yr'))
-#Var_list_r.remove('date_yr')
-#VarDate=np.delete(VarDate,0,Var_list_r.index('date_mm'))
-#Var_list_r.remove('date_mm')
-#VarDate=np.delete(VarDate,0,Var_list_r.index('date_dd'))
-#Var_list_r.remove('date_dd')
-#
-#print Var_list
-#print Var_list_r
-
-
-plt.scatter(N_unAve,SpeedAve, c=t_un)
+plt.figure()
+plt.plot(N_unAve,SpeedAve, 'k')
+plt.scatter(N_unAve,SpeedAve, c=t_unAve)
 plt.colorbar()
 plt.show()
+
+
+#idays=1.0
+#
+#for iday in range(1,30):
+#    print iday,VarBig.shape
+#    date_select[2]=str(int(date_select[2])+1)
+#    VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
+#    N_un,Speed,t_un = tpm.find_N_unique_vs_t(VarDate,Var_list)
+#
+#    N_unAve=N_unAve+N_un
+#    SpeedAve=Speed+SpeedAve
+#    idays=idays+1.0 
+##
+##    plt.subplot(2,1,1)
+##    plt.plot(t_un,N_un)
+##    plt.xlim((21,24.25))
+##    plt.subplot(2,1,2)
+##    plt.plot(t_un,Speed)
+##    plt.xlim((21,24.25))
+##    plt.pause(0.5)
+##
+#    # remove rows already processed
+#    ids=np.where(VarBig[:,Var_list.index('date_dd')]>iday)
+#    VarBig=VarBig[ids[0],:]
+##
+#SpeedAve=SpeedAve/idays
+#N_unAve=N_unAve/idays
+##
+#plt.subplot(1,3,3)
+#plt.plot(t_un,N_unAve,'k',marker='o',linewidth=2.0)
+#plt.show()
+#
+##plt.subplot(2,1,2)
+##plt.plot(t_un,SpeedAve,'k',linewidth=2.0)
+##plt.show()
+## single day, don't need that extra info
+##Var_list_r=list(Var_list)
+##VarDate=np.delete(VarDate,0,Var_list_r.index('date_yr'))
+##Var_list_r.remove('date_yr')
+##VarDate=np.delete(VarDate,0,Var_list_r.index('date_mm'))
+##Var_list_r.remove('date_mm')
+##VarDate=np.delete(VarDate,0,Var_list_r.index('date_dd'))
+##Var_list_r.remove('date_dd')
+##
+##print Var_list
+##print Var_list_r
+#
+#
+##plt.scatter(N_unAve,SpeedAve, c=t_un)
+##plt.colorbar()
+##plt.show()
 
