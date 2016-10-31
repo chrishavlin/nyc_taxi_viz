@@ -274,9 +274,8 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename
 #
 #    return date_start,date_end
     
-def find_N_unique_vs_t(Var,Var_list):    
-    N_t=200
-    times=np.linspace(0,24.0,N_t)
+def find_N_unique_vs_t(Var,Var_list,times):    
+    N_t=len(times)
     
     pick=Var[:,Var_list.index('pickup_time_hr')]
     elap=Var[:,Var_list.index('elapsed_time_min')]/60.0
@@ -287,13 +286,10 @@ def find_N_unique_vs_t(Var,Var_list):
     # copy values with pickup within certain time, offset it. 
     id_move=np.where(pick>=21.0)
     pick=np.append(pick,pick[id_move[0]]-24.0)
-    drop=np.append(drop,drop[id_move[0]])
+    drop=np.append(drop,drop[id_move[0]]-24.0)
     speed=np.append(speed,speed[id_move[0]])
     
-    print 'min:',pick.min(),drop.min()
-    print 'max:',pick.max(),drop.max()
-    print 'min/max elap:',elap.min(),elap.max()
-
+    # initialize the taxi count and speed arrays
     N_unique = np.zeros(times.shape)
     Speed = np.zeros(times.shape)
 

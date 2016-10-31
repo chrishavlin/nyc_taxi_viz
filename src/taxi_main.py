@@ -308,6 +308,24 @@ def read_gridded_file(read_dir,Varname):
 
     return Var,VarCount,x,y
 
+def write_taxi_count_speed(write_dir,V1,V1name,V2,V2name,V3,V3name):   
+    """ writes out the spatially binned data """
+
+    if not os.path.exists(write_dir):
+       os.makedirs(write_dir)
+
+    f_base=write_dir+'/'
+    np.savetxt(f_base + V1name + '.txt', V1, delimiter=',')
+    np.savetxt(f_base + V2name + '.txt', V2, delimiter=',')
+    np.savetxt(f_base + V3name + '.txt', V3, delimiter=',')
+
+def read_taxi_count_speed(read_dir,Varname):   
+    """ reads in the spatially binned data """
+    f_base=read_dir+'/'+Varname
+    Var=np.loadtxt(f_base +'.txt',delimiter=',')
+
+    return Var
+
 """ END OF FUNCTIONS """
 
 if __name__ == '__main__':

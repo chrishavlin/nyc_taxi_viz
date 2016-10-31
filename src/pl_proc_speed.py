@@ -38,6 +38,8 @@ import datetime as dt
 #dir_base='../data_sub_sampled/'
 dir_base='../full_csv_files/'
 
+write_dir='../data_products/hysteresis_test'
+
 # choose which variables to import
 # possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
 #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
@@ -69,29 +71,23 @@ date_end=max(Date)
 date_i = date_start
 one_day_delta = np.timedelta64(1, 'D')
 
-# calculate first date
-ids=np.where(Date==date_start)
-VarDate=VarBig[ids[0],:]#tpm.select_data_by_date(VarBig,Var_list,Date,date_i.year,date_i.month,date_i.day)
-N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
-date_count=1
-date_i=date_i+one_day_delta
+t_unAve=np.linspace(0,24,24*10)
 
-print date_start,date_end,type(date_i)
+# find total elapsed days, initialize N and Speed arrays
+Ndates=date_end.astype(dt.datetime)-date_start.astype(dt.datetime) # (convert from np datetime64 to datetime)
+N_un=np.zeros((Ndates.days+1,len(t_unAve)))
+Speed_un=np.zeros((Ndates.days+1,len(t_unAve)))
 
+# now loop through days to find daily hysterises 
+date_count=0
 while date_i <= date_end:
       print 'processing',date_i
 
-      # process single day
+      # pull out and process single day
       ids=np.where(Date==date_i)
-      VarDate=VarBig[ids[0],:]#tpm.select_data_by_date(VarBig,Var_list,Date,date_i.year,date_i.month,date_i.day)
-#      VarDate=tpm.select_data_by_date(VarBig,Var_list,date_i.year,date_i.month,date_i.day)
-      print 'Shapez:',VarBig.shape,VarDate.shape
-      N_un,Speed_un,t_un = tpm.find_N_unique_vs_t(VarDate,Var_list)
-#
-      # keep track of sum
-      N_unAve=N_unAve+N_un
-      SpeedAve=SpeedAve+Speed_un
-#
+      VarDate=VarBig[ids[0],:]
+      N_un[date_count,:],Speed_un[date_count,:],t_un = tpm.find_N_unique_vs_t(VarDate,Var_list,t_unAve)
+
       # keep only unprocessed dates
       ids=np.where(Date>date_i)
       VarBig=VarBig[ids[0],:]
@@ -100,18 +96,27 @@ while date_i <= date_end:
       # increment counters
       date_count=date_count+1
       date_i = date_i + one_day_delta
-#
+
+# write out the Speed and N and t arrays
+tm.write_taxi_count_speed(write_dir,N_un,'N',Speed_un,'Speed',t_unAve,'t')
+
+# test the load
+N=tm.read_taxi_count_speed(write_dir,'N')
+V=tm.read_taxi_count_speed(write_dir,'Speed')
+t=tm.read_taxi_count_speed(write_dir,'t')
+
 # get average of days
-N_unAve=N_unAve/float(date_count)
-SpeedAve=SpeedAve/float(date_count)
+N_unAve=np.mean(N,axis=0)
+SpeedAve=np.mean(V,axis=0)
 
-## do it all in one chunk
-#N_unAve2,SpeedAve2,t_unAve2 = tpm.find_N_unique_vs_t(VarBig,Var_list)
-#
-
+# plotting
 plt.figure()
 plt.plot(N_unAve,SpeedAve, 'k')
-plt.scatter(N_unAve,SpeedAve, c=t_unAve)
+for it in range(0,24,1):
+    it_id=np.where(abs(t-it)==min(abs(t-it)))
+    plt.scatter(N_unAve[it_id[0]],SpeedAve[it_id[0]],s=125,c='k')
+plt.scatter(N_unAve,SpeedAve, c=t,s=50,edgecolor='none')
 plt.colorbar()
+
 plt.show()
 
