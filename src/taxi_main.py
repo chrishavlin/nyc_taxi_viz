@@ -32,6 +32,7 @@ import time,os
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import taxi_plotmod as tpm
+import datetime as dt
 
 """---------
 Functions
@@ -66,8 +67,9 @@ def read_all_variables(f,there_is_a_header,VarImportList):
     Nlines = indx
 #   Initizialize Variable Array and List
     N_VarImport=len(VarImportList)
-    if 'date' in VarImportList:
-       N_VarImport=N_VarImport+2
+    Date=np.empty(Nlines,dtype='datetime64[D]')
+ 
+
     Vars=np.zeros((indx,N_VarImport))
     Var_list=[None] * N_VarImport
 
@@ -94,28 +96,21 @@ def read_all_variables(f,there_is_a_header,VarImportList):
         var_indx = 0        
         if len(line) == 19:
 
+           dates=line[1].split()[0] # the date string, "yyyy-mm-dd"
+           #dates=dates.split('-')
+           #dtim=dt.date(int(dates[0]),int(dates[1]),int(dates[2]))
+           #Date.append(dtim)
+           
+           Date[indx]=np.datetime64(dates)
+
            if 'pickup_time_hr' in VarImportList:
               Vars[indx,var_indx]=datetime_string_to_time(line[1],'hr')
               Var_list[var_indx]='pickup_time_hr'
               var_indx=var_indx+1
 
-           if 'date' in VarImportList:
-              dates=line[1].split()[0].split('-') # the date string, "yyyy-mm-dd"
-              if float(dates[0])==0.0:
-                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
-                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
-                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
-                 print 'jasldkfjasldkjflsakdjflaskdjflsakdflsadkjfafd'
-                 print dates[0]
-              Vars[indx,var_indx]=float(dates[0])
-              Var_list[var_indx]='date_yr'
-              var_indx=var_indx+1
-              Vars[indx,var_indx]=float(dates[1])
-              Var_list[var_indx]='date_mm'
-              var_indx=var_indx+1
-              Vars[indx,var_indx]=float(dates[2])
-              Var_list[var_indx]='date_dd'
-              var_indx=var_indx+1
+#              Vars[indx,var_indx]=np.datetime64(dates)
+#              Var_list[var_indx]='date'
+#              var_indx=var_indx+1
            
            if 'dropoff_time_hr' in VarImportList:
               Vars[indx,var_indx]=datetime_string_to_time(line[2],'hr')
@@ -201,9 +196,11 @@ def read_all_variables(f,there_is_a_header,VarImportList):
     
     # remove zero lines, which will be padded at end
     if zero_lines>0:
-       Vars=Vars[0:Nlines-zero_lines-1,:]
+       Vars=Vars[0:Nlines-zero_lines,:]
+       Date=Date[0:Nlines-zero_lines]
 
-    return Vars,Var_list
+
+    return Vars,Var_list,Date
 
 def datetime_string_to_time(dt_string,time_units):
     """ converts datetime string to time in units of time_units 
@@ -250,7 +247,7 @@ def read_taxi_files(dir_base,Vars_To_Import):
     N_files=len(os.listdir(dir_base)) # number of files in directory
     ifile = 1 # file counter
     Elapsed_tot=0 # time counter
-    
+    #Dates=[] 
     for fn in os.listdir(dir_base):             # loop over directory contents 
          if os.path.isfile(dir_base+fn):        # is the current path obect a file?
             flnm=dir_base + fn                  # construct the file name
@@ -261,12 +258,19 @@ def read_taxi_files(dir_base,Vars_To_Import):
     
           # distribute current file to lat/lon bins:
 
-            VarChunk,Var_list=read_all_variables(fle,True,Vars_To_Import) 
+            VarChunk,Var_list,DateChunk=read_all_variables(fle,True,Vars_To_Import) 
     
             if ifile == 1:
     	       VarBig = VarChunk
+               Dates=DateChunk#np.array([tuple(DateChunk)], dtype='datetime64[D]')
+               print Dates.shape,DateChunk.shape,VarChunk.shape
+               #Dates.extend(DateChunk)
     	    else: 
                VarBig = np.vstack((VarBig,VarChunk))
+               #DateChunk=np.array([tuple(DateChunk)],dtype='datetime64[D]')
+               print Dates.shape,DateChunk.shape,VarChunk.shape
+               Dates = np.concatenate((Dates,DateChunk))
+               #Dates.extend(DateChunk)
     
             elapsed=(time.clock()-start)        # elapsed time
             Elapsed_tot=Elapsed_tot+elapsed     # cumulative elapsed
@@ -280,7 +284,7 @@ def read_taxi_files(dir_base,Vars_To_Import):
             fle.close()                         # close current file
             ifile = ifile+1                     # increment file counter
 
-    return VarBig,Var_list
+    return VarBig,Var_list,Dates
 
 def write_gridded_file(write_dir,Var,VarCount,x,y,Varname):   
     """ writes out the spatially binned data """

@@ -31,6 +31,7 @@ import numpy as np
 import taxi_plotmod as tpm
 import taxi_main as tm
 import matplotlib.pyplot as plt
+import datetime as dt
 
 
 # the directory with the data
@@ -42,104 +43,75 @@ dir_base='../full_csv_files/'
 #          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
 #          'drop_lat','elapsed_time_min'
 
-#Vars_To_Import=['date','pickup_time_hr','elapsed_time_min','speed_mph']
-Vars_To_Import=['date','elapsed_time_min','pickup_time_hr','speed_mph']
-VarBig,Var_list=tm.read_taxi_files(dir_base,Vars_To_Import)
+# import data
+Vars_To_Import=['elapsed_time_min','pickup_time_hr','speed_mph']
+VarBig,Var_list,Date=tm.read_taxi_files(dir_base,Vars_To_Import)
 
-# histogram of all values
-Pickups=VarBig[:,Var_list.index('pickup_time_hr')]
+# cull data 
+print 'shape, before culling:',VarBig.shape
+# speed limit
 Speed=VarBig[:,Var_list.index('speed_mph')]
 ids=np.where((VarBig[:,Var_list.index('speed_mph')]<80) &
               (VarBig[:,Var_list.index('speed_mph')]>0))
-
-plt.subplot(1,3,1)
-plt.hist(Pickups[ids[0]],bins=24,label='limited set (0 < speed < 80)',histtype='step')
-plt.hist(Pickups[ids[0]],bins=240,label='limited set (0 < speed < 80)',histtype='step')
-plt.hist(Pickups[ids[0]],bins=2400,label='limited set (0 < speed < 80)',histtype='step')
-
-plt.subplot(1,3,2)
-plt.hist(Speed,bins=20,label='full set',histtype='step',range=(-10,80))
-plt.hist(Speed[ids[0]],bins=20,label='limited set',histtype='step')
-
-plt.subplot(1,3,3)
-Ela=VarBig[ids[0],Var_list.index('elapsed_time_min')]
-idA=np.where((Ela<100) & (Ela > 0))
-plt.hist(Ela[idA[0]],bins=200,label='limited set',histtype='step')
-plt.xlim(0,100)
-
-print 'shape:',VarBig.shape
 VarBig=VarBig[ids[0],:]
-print VarBig.shape
-VarBig=VarBig[np.where((Ela<2.0*60.0)&(Ela>0))[0]]
-print VarBig.shape
-#
-date_start,date_end=tpm.min_max_date(VarBig,Var_list)
-date_select=date_start.split('-')
-print date_start,date_end
-#
-date_select[2]=str(int(date_select[2])+1)
-VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
-#N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
-N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarBig,Var_list)
+Date=Date[ids[0]]
 
-plt.subplot(1,3,1)
-plt.plot(t_unAve,N_unAve,'k')
+# elapsed time limit
+Ela=VarBig[:,Var_list.index('elapsed_time_min')]
+idA=np.where((Ela<120) & (Ela > 0))
+VarBig=VarBig[idA[0],:]
+Date=Date[idA[0]]
+print 'shape, after culling:',VarBig.shape
+
+# loop over dates
+date_start=min(Date)
+date_end=max(Date)
+date_i = date_start
+one_day_delta = np.timedelta64(1, 'D')
+
+# calculate first date
+ids=np.where(Date==date_start)
+VarDate=VarBig[ids[0],:]#tpm.select_data_by_date(VarBig,Var_list,Date,date_i.year,date_i.month,date_i.day)
+N_unAve,SpeedAve,t_unAve = tpm.find_N_unique_vs_t(VarDate,Var_list)
+date_count=1
+date_i=date_i+one_day_delta
+
+print date_start,date_end,type(date_i)
+
+while date_i <= date_end:
+      print 'processing',date_i
+
+      # process single day
+      ids=np.where(Date==date_i)
+      VarDate=VarBig[ids[0],:]#tpm.select_data_by_date(VarBig,Var_list,Date,date_i.year,date_i.month,date_i.day)
+#      VarDate=tpm.select_data_by_date(VarBig,Var_list,date_i.year,date_i.month,date_i.day)
+      print 'Shapez:',VarBig.shape,VarDate.shape
+      N_un,Speed_un,t_un = tpm.find_N_unique_vs_t(VarDate,Var_list)
+#
+      # keep track of sum
+      N_unAve=N_unAve+N_un
+      SpeedAve=SpeedAve+Speed_un
+#
+      # keep only unprocessed dates
+      ids=np.where(Date>date_i)
+      VarBig=VarBig[ids[0],:]
+      Date=Date[ids[0]]
+
+      # increment counters
+      date_count=date_count+1
+      date_i = date_i + one_day_delta
+#
+# get average of days
+N_unAve=N_unAve/float(date_count)
+SpeedAve=SpeedAve/float(date_count)
+
+## do it all in one chunk
+#N_unAve2,SpeedAve2,t_unAve2 = tpm.find_N_unique_vs_t(VarBig,Var_list)
+#
 
 plt.figure()
 plt.plot(N_unAve,SpeedAve, 'k')
 plt.scatter(N_unAve,SpeedAve, c=t_unAve)
 plt.colorbar()
 plt.show()
-
-
-#idays=1.0
-#
-#for iday in range(1,30):
-#    print iday,VarBig.shape
-#    date_select[2]=str(int(date_select[2])+1)
-#    VarDate=tpm.select_data_by_date(VarBig,Var_list,date_select[0],date_select[1],date_select[2])
-#    N_un,Speed,t_un = tpm.find_N_unique_vs_t(VarDate,Var_list)
-#
-#    N_unAve=N_unAve+N_un
-#    SpeedAve=Speed+SpeedAve
-#    idays=idays+1.0 
-##
-##    plt.subplot(2,1,1)
-##    plt.plot(t_un,N_un)
-##    plt.xlim((21,24.25))
-##    plt.subplot(2,1,2)
-##    plt.plot(t_un,Speed)
-##    plt.xlim((21,24.25))
-##    plt.pause(0.5)
-##
-#    # remove rows already processed
-#    ids=np.where(VarBig[:,Var_list.index('date_dd')]>iday)
-#    VarBig=VarBig[ids[0],:]
-##
-#SpeedAve=SpeedAve/idays
-#N_unAve=N_unAve/idays
-##
-#plt.subplot(1,3,3)
-#plt.plot(t_un,N_unAve,'k',marker='o',linewidth=2.0)
-#plt.show()
-#
-##plt.subplot(2,1,2)
-##plt.plot(t_un,SpeedAve,'k',linewidth=2.0)
-##plt.show()
-## single day, don't need that extra info
-##Var_list_r=list(Var_list)
-##VarDate=np.delete(VarDate,0,Var_list_r.index('date_yr'))
-##Var_list_r.remove('date_yr')
-##VarDate=np.delete(VarDate,0,Var_list_r.index('date_mm'))
-##Var_list_r.remove('date_mm')
-##VarDate=np.delete(VarDate,0,Var_list_r.index('date_dd'))
-##Var_list_r.remove('date_dd')
-##
-##print Var_list
-##print Var_list_r
-#
-#
-##plt.scatter(N_unAve,SpeedAve, c=t_un)
-##plt.colorbar()
-##plt.show()
 

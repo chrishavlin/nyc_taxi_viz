@@ -30,6 +30,7 @@ Import libraries:
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import datetime as dt
 
 """---------
 Classes
@@ -232,43 +233,46 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename
       print 'close figure to continue...'
       plt.show()
 
-def select_data_by_date(VarBig,Var_list,yyyy,mm,dd):
+#def select_data_by_date(VarBig,Var_list,Dates,yyyy=9999,mm=99,dd=99):
+#
+#    if yyyy != 9999:
+#       yyyy_i=np.where(DatesVarBig[:,Var_list.index('date_yr')]==float(yyyy))
+#       Var_date=VarBig[yyyy_i[0],:]
+#    else:
+#       Var_date=VarBig
+#
+#    if mm != 99:
+#       mm_i=np.where(Var_date[:,Var_list.index('date_mm')]==float(mm))
+#       Var_date=Var_date[mm_i[0],:]
+#
+#    if dd != 99:
+#       dd_i=np.where(Var_date[:,Var_list.index('date_dd')]==float(dd))
+#       Var_date=Var_date[dd_i[0],:]
+#
+#    return Var_date
 
-    if len(yyyy):
-       yyyy_i=np.where(VarBig[:,Var_list.index('date_yr')]==float(yyyy))
-       Var_date=VarBig[yyyy_i[0],:]
-    else:
-       Var_date=VarBig
-
-    if len(mm):
-       mm_i=np.where(Var_date[:,Var_list.index('date_mm')]==float(mm))
-       Var_date=Var_date[mm_i[0],:]
-
-    if len(dd):
-       dd_i=np.where(Var_date[:,Var_list.index('date_dd')]==float(dd))
-       Var_date=Var_date[dd_i[0],:]
-
-    return Var_date
-
-def min_max_date(VarBig,Var_list):    
-
-    min_yr=str(int(np.min(VarBig[:,Var_list.index('date_yr')])))
-    Var=select_data_by_date(VarBig,Var_list,min_yr,'','')
-    min_mo=str(int(np.min(Var[:,Var_list.index('date_mm')])))
-    Var=select_data_by_date(Var,Var_list,'',min_mo,'')
-    min_dd=str(int(np.min(Var[:,Var_list.index('date_dd')])))
-
-    max_yr=str(int(np.max(VarBig[:,Var_list.index('date_yr')])))
-    Var=select_data_by_date(VarBig,Var_list,max_yr,'','')
-    max_mo=str(int(np.max(Var[:,Var_list.index('date_mm')])))
-    Var=select_data_by_date(Var,Var_list,'',max_mo,'')
-    max_dd=str(int(np.max(Var[:,Var_list.index('date_dd')])))
-
-     
-    date_start=min_yr+'-'+min_mo+'-'+min_dd
-    date_end=max_yr+'-'+max_mo+'-'+max_dd
-
-    return date_start,date_end
+#def min_max_date(VarBig,Var_list):    
+#    """ returns the starting and end date of VarBig in datetime format """
+#
+#    dates=VarBig[:,Var_list.index('date')]
+#  
+#
+#    min_yr=int(np.min(VarBig[:,Var_list.index('date_yr')]))
+#    Var=select_data_by_date(VarBig,Var_list,yyyy=min_yr)
+#    min_mo=int(np.min(Var[:,Var_list.index('date_mm')]))
+#    Var=select_data_by_date(Var,Var_list,mm=min_mo)
+#    min_dd=int(np.min(Var[:,Var_list.index('date_dd')]))
+#
+#    max_yr=int(np.max(VarBig[:,Var_list.index('date_yr')]))
+#    Var=select_data_by_date(VarBig,Var_list,yyyy=min_yr)
+#    max_mo=int(np.max(Var[:,Var_list.index('date_mm')]))
+#    Var=select_data_by_date(Var,Var_list,mm=max_mo)
+#    max_dd=int(np.max(Var[:,Var_list.index('date_dd')]))
+#     
+#    date_start=dt.date(int(min_yr),int(min_mo),int(min_dd))
+#    date_end=dt.date(int(max_yr),int(max_mo),int(max_dd))
+#
+#    return date_start,date_end
     
 def find_N_unique_vs_t(Var,Var_list):    
     N_t=200
@@ -277,9 +281,15 @@ def find_N_unique_vs_t(Var,Var_list):
     pick=Var[:,Var_list.index('pickup_time_hr')]
     elap=Var[:,Var_list.index('elapsed_time_min')]/60.0
     drop=pick[:]+elap[:]
+    speed=Var[:,Var_list.index('speed_mph')]
 
-    bb=np.where(drop>23.9)
-    bb=np.where(pick<0.2)
+
+    # copy values with pickup within certain time, offset it. 
+    id_move=np.where(pick>=21.0)
+    pick=np.append(pick,pick[id_move[0]]-24.0)
+    drop=np.append(drop,drop[id_move[0]])
+    speed=np.append(speed,speed[id_move[0]])
+    
     print 'min:',pick.min(),drop.min()
     print 'max:',pick.max(),drop.max()
     print 'min/max elap:',elap.min(),elap.max()
@@ -290,31 +300,12 @@ def find_N_unique_vs_t(Var,Var_list):
     for it in range(0,N_t,1):
         current_time=times[it]
 
-        drop2=np.empty_like(drop)
-        pick2=np.empty_like(pick)
-        drop2[:]=drop
-        pick2[:]=pick
-        #if current_time<2.0:
-        #   pick2[np.where(drop2 >= 23)[0]]=pick2[np.where(drop2 >= 23)[0]]-24.0
-        #   drop2[np.where(drop2 >= 23)[0]]=drop2[np.where(drop2 >= 23)[0]]-24.0
-        #if current_time>22.0: 
-        #   id_2=np.where(drop2<=2.0)
-        #   pick2[id_2[0]]=pick2[id_2[0]]+24.0
-        #   drop2[id_2[0]]=drop2[id_2[0]]+24.0
-
-        id_pickup=np.where((drop2 >= current_time) & (pick2<=current_time))
+        id_pickup=np.where((drop >= current_time) & (pick<=current_time))
 
         if len(id_pickup[0])>0:
            N_unique[it]=len(id_pickup[0])
-           Speed[it]=Var[id_pickup[0],Var_list.index('speed_mph')].mean()
+           Speed[it]=speed[id_pickup[0]].mean()
 
-    print times[0],times[N_t-1]
-    print N_unique[0],N_unique[N_t-1]
-    print times[1],times[N_t-2]
-    print N_unique[1],N_unique[N_t-2]
-        
-
-#    times = times
     return N_unique,Speed,times
 
 def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
