@@ -36,8 +36,7 @@ import matplotlib.pyplot as plt
 # the directory with the data
 load_dir='../data_products/hysteresis_3mo'
 
-
-# test the load
+# load saved files
 N=tm.read_taxi_count_speed(load_dir,'N')
 V=tm.read_taxi_count_speed(load_dir,'Speed')
 t=tm.read_taxi_count_speed(load_dir,'t')
@@ -49,11 +48,25 @@ SpeedAve=np.mean(V,axis=0)
 # plotting
 plt.figure()
 plt.plot(N_unAve,SpeedAve, 'k')
-for it in range(0,24,1):
-    it_id=np.where(abs(t-it)==min(abs(t-it)))
-    plt.scatter(N_unAve[it_id[0]],SpeedAve[it_id[0]],s=125,c='k')
+plt.hold
 plt.scatter(N_unAve,SpeedAve, c=t,s=50,edgecolor='none')
 plt.colorbar()
+for it in range(0,24,1):
+    it_id=np.where(abs(t-it)==min(abs(t-it)))
+    if len(it_id[0])>1:
+       it_id=it_id[0][0]
+    else:
+       it_id=it_id[0]
+    plt.scatter(N_unAve[it_id],SpeedAve[it_id],s=125,c='k')
 
+#plt.figure()
+#Ndays=len(V[:,0])
+#for iday in range(0,Ndays):
+#    clr=float(iday)/float(Ndays)
+#    plt.scatter(N[iday,:],V[iday,:],c=(clr,0,0))
+#    plt.title('day'+str(iday)+'of'+str(Ndays))
+#    plt.pause(0.05)
+     
+     
 plt.show()
 

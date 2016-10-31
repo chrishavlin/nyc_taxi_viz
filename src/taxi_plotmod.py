@@ -73,7 +73,7 @@ class binned_variable(object):
     def bin_hist(self,VarBig,Var_list,bin_edge1,bin_edge2):
         # extract variable of interest from full dataset
         var0 = VarBig[:,Var_list.index(self.varname)]
-        time0 = VarBig[:,0]
+        time0 = VarBig[:,Var_list.index('pickup_time_hr')]
 
         bin_var=var0[time0>bin_edge1]
         time=time0[time0>bin_edge1]
@@ -233,47 +233,6 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename
       print 'close figure to continue...'
       plt.show()
 
-#def select_data_by_date(VarBig,Var_list,Dates,yyyy=9999,mm=99,dd=99):
-#
-#    if yyyy != 9999:
-#       yyyy_i=np.where(DatesVarBig[:,Var_list.index('date_yr')]==float(yyyy))
-#       Var_date=VarBig[yyyy_i[0],:]
-#    else:
-#       Var_date=VarBig
-#
-#    if mm != 99:
-#       mm_i=np.where(Var_date[:,Var_list.index('date_mm')]==float(mm))
-#       Var_date=Var_date[mm_i[0],:]
-#
-#    if dd != 99:
-#       dd_i=np.where(Var_date[:,Var_list.index('date_dd')]==float(dd))
-#       Var_date=Var_date[dd_i[0],:]
-#
-#    return Var_date
-
-#def min_max_date(VarBig,Var_list):    
-#    """ returns the starting and end date of VarBig in datetime format """
-#
-#    dates=VarBig[:,Var_list.index('date')]
-#  
-#
-#    min_yr=int(np.min(VarBig[:,Var_list.index('date_yr')]))
-#    Var=select_data_by_date(VarBig,Var_list,yyyy=min_yr)
-#    min_mo=int(np.min(Var[:,Var_list.index('date_mm')]))
-#    Var=select_data_by_date(Var,Var_list,mm=min_mo)
-#    min_dd=int(np.min(Var[:,Var_list.index('date_dd')]))
-#
-#    max_yr=int(np.max(VarBig[:,Var_list.index('date_yr')]))
-#    Var=select_data_by_date(VarBig,Var_list,yyyy=min_yr)
-#    max_mo=int(np.max(Var[:,Var_list.index('date_mm')]))
-#    Var=select_data_by_date(Var,Var_list,mm=max_mo)
-#    max_dd=int(np.max(Var[:,Var_list.index('date_dd')]))
-#     
-#    date_start=dt.date(int(min_yr),int(min_mo),int(min_dd))
-#    date_end=dt.date(int(max_yr),int(max_mo),int(max_dd))
-#
-#    return date_start,date_end
-    
 def find_N_unique_vs_t(Var,Var_list,times):    
     N_t=len(times)
     
@@ -315,14 +274,13 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     min_unbin=bin_inst.varmin
 
     unbinned_value = VarBig[:,Var_list.index(bin_varname)]
-    time = VarBig[:,0]
+    time = VarBig[:,Var_list.index('pickup_time_hr')]
     
     time = time[unbinned_value>=min_unbin]
     unbinned_value = unbinned_value[unbinned_value>=min_unbin]
     
     time = time[unbinned_value<=max_unbin]
     unbinned_value = unbinned_value[unbinned_value<=max_unbin]
-
 
     clr = (0.3,0.3,0.3)
     
@@ -364,15 +322,5 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     plt.ylabel('2-standard deviations of ' + bin_varname)
     plt.xlim([0,24])
 
-    #LAB=str(unbinned_value.size) + ',' + str(round(np.median(unbinned_value),1))
-    
-    plt.figure()
-    plt.plot(bin_inst.N,bin_inst.med)
-    plt.scatter(bin_inst.N,bin_inst.med,c=bin_inst.time_bc)
-    plt.colorbar()
-    plt.xlabel('N')
-    plt.ylabel('speed [mph]')
     plt.show()
     
-    
-    #np.savetxt(write_dir+'/Vars.txt', Vars, delimiter=',')

@@ -33,17 +33,11 @@ import taxi_main as tm
 import matplotlib.pyplot as plt
 import datetime as dt
 
-
 # the directory with the data
 #dir_base='../data_sub_sampled/'
 dir_base='../full_csv_files/'
 
 write_dir='../data_products/hysteresis_test'
-
-# choose which variables to import
-# possible variables: 'pickup_time_hr','dist_mi','speed_mph','psgger','fare',
-#          'tips','payment_type','pickup_lon','pickup_lat','drop_lon',
-#          'drop_lat','elapsed_time_min'
 
 # import data
 Vars_To_Import=['elapsed_time_min','pickup_time_hr','speed_mph']
@@ -64,6 +58,10 @@ idA=np.where((Ela<120) & (Ela > 0))
 VarBig=VarBig[idA[0],:]
 Date=Date[idA[0]]
 print 'shape, after culling:',VarBig.shape
+
+# plot 2-D histogram
+time_bin_edge=np.linspace(0,24,24*4)
+tpm.plt_two_d_histogram('speed_mph',0,80,time_bin_edge,VarBig,Var_list)
 
 # loop over dates
 date_start=min(Date)
