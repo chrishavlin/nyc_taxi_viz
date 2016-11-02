@@ -48,6 +48,8 @@ class binned_variable(object):
         # initialize the output 
         self.mean=np.zeros((self.time_be.size-1,1))
         self.med=np.zeros((self.time_be.size-1,1))
+        self.firstquart=np.zeros((self.time_be.size-1,1))
+        self.thirdquart=np.zeros((self.time_be.size-1,1))
         self.std=np.zeros((self.time_be.size-1,1))
         self.N=np.zeros((self.time_be.size-1,1))
 
@@ -69,6 +71,10 @@ class binned_variable(object):
             self.med[i_bin]=np.median(var2bin)
             self.std[i_bin]=var2bin.std()
             self.N[i_bin]=var2bin.size
+
+            self.thirdquart[i_bin]=np.median(np.where(var2bin>self.med[i_bin]))
+            self.firstquart[i_bin]=np.median(np.where(var2bin<self.med[i_bin]))
+
 
     def bin_hist(self,VarBig,Var_list,bin_edge1,bin_edge2):
         # extract variable of interest from full dataset
@@ -265,8 +271,10 @@ def find_N_unique_vs_t(Var,Var_list,times):
 
 def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     
+    # median of all data
     bin_inst=binned_variable(bin_varname,time_b,VarMin,VarMax)
     bin_inst.bin_the_values(VarBig,Var_list)
+
 
     # all values, limited by min,max
 
@@ -289,6 +297,8 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     plt.colorbar()
     plt.plot(bin_inst.time_bc,bin_inst.mean,color=(0.6,0.6,0.6),linewidth=3)
     plt.plot(bin_inst.time_bc,bin_inst.med,color=clr,linewidth=3)
+    plt.plot(bin_inst.time_bc,bin_inst.firstquart,color=clr,linewidth=3)
+    plt.plot(bin_inst.time_bc,bin_inst.thirdquart,color=clr,linewidth=3)
     plt.xlim([0,24])
     plt.ylim([min_unbin,max_unbin])
     plt.ylim([min_unbin,50])
