@@ -72,8 +72,8 @@ class binned_variable(object):
             self.std[i_bin]=var2bin.std()
             self.N[i_bin]=var2bin.size
 
-            self.thirdquart[i_bin]=np.median(np.where(var2bin>self.med[i_bin]))
-            self.firstquart[i_bin]=np.median(np.where(var2bin<self.med[i_bin]))
+            self.thirdquart[i_bin]=np.median(var2bin[np.where(var2bin>self.med[i_bin])])
+            self.firstquart[i_bin]=np.median(var2bin[np.where(var2bin<self.med[i_bin])])
 
 
     def bin_hist(self,VarBig,Var_list,bin_edge1,bin_edge2):
@@ -327,9 +327,9 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     plt.legend()
     
     plt.subplot(1,3,3)
-    plt.plot(bin_inst.time_bc,2*bin_inst.std)
+    plt.plot(bin_inst.time_bc,abs(bin_inst.firstquart-bin_inst.thirdquart),color=clr,linewidth=3)
     plt.xlabel('time of day [24-hr]')
-    plt.ylabel('2-standard deviations of ' + bin_varname)
+    plt.ylabel('spread of ' + bin_varname + ' (first - third quartiles)')
     plt.xlim([0,24])
 
     plt.show()
