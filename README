@@ -23,6 +23,8 @@ taxi_main.py        the main module, contains all functions for reading and writ
 taxi_plotmod.py     a module with functions for processing raw data and plotting the results
 pl_proc_raw.py      a script that processes the raw data to create a spatially binned data product
 pl_load_and_map.py  a script that loads a processed file then plots the spatially binned data
+pl_proc_speed.py    a script that calculates average speed of cabs vs time of day and/or cab count
+pl_plot_speed.py    a script that plots results from pl_proc_speed
 
 DATA
 

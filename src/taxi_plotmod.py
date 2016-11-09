@@ -240,6 +240,25 @@ def plt_map(Zvar,minZ,maxZ,x,y,LogPlot=False,ShowFig=True,SaveFig=False,savename
       plt.show()
 
 def find_N_unique_vs_t(Var,Var_list,times):    
+    '''
+    finds number of cabs hired at given time points. 
+    hired cabs at a given time, N(t), defined as:
+
+        N(t) = Npickups(t) + Nactive(t)
+
+    where Npickups is the number of pickups at t, exactly, and 
+    Nactive is the number of cabs with a pickup time before t and a drop off time after t. 
+
+    input:
+     Var        The 2-D array of all variables
+     Var_list   The list identifying the columns of Var
+     times      The time points to calculate N
+
+    output:
+     N_unique   Number of cabs at time points
+     Speed      Average speed at each time point
+
+    '''
     N_t=len(times)
     
     pick=Var[:,Var_list.index('pickup_time_hr')]
@@ -271,12 +290,11 @@ def find_N_unique_vs_t(Var,Var_list,times):
 
 def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     
-    # median of all data
+    # median vs time
     bin_inst=binned_variable(bin_varname,time_b,VarMin,VarMax)
     bin_inst.bin_the_values(VarBig,Var_list)
 
-
-    # all values, limited by min,max
+    # cull data by by min,max for 2d histogram plot
 
     max_unbin=bin_inst.varmax
     min_unbin=bin_inst.varmin
@@ -290,8 +308,8 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     time = time[unbinned_value<=max_unbin]
     unbinned_value = unbinned_value[unbinned_value<=max_unbin]
 
+    # plot 2d histogram
     clr = (0.3,0.3,0.3)
-    
     plt.subplot(1,3,1)
     plt.hist2d(time,unbinned_value,(48,30),cmap=cm.hot)
     plt.colorbar()
@@ -305,6 +323,7 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     plt.ylabel(bin_varname)
     plt.xlabel('time of day [24-hr]')
     
+    # some selected 1-D histograms
     plt.subplot(1,3,2)
     bin_inst.bin_hist(VarBig,Var_list,5,6)
     LAB='5-6,'+str(bin_inst.hist_id_N) + ',' + str(round(bin_inst.hist_id_med,1))
@@ -326,6 +345,7 @@ def plt_two_d_histogram(bin_varname,VarMin,VarMax,time_b,VarBig,Var_list):
     plt.ylim([0,0.15])
     plt.legend()
     
+    # interquartile range (midspread) plot
     plt.subplot(1,3,3)
     plt.plot(bin_inst.time_bc,abs(bin_inst.firstquart-bin_inst.thirdquart),color=clr,linewidth=3)
     plt.xlabel('time of day [24-hr]')

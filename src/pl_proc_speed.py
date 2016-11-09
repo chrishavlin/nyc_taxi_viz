@@ -34,8 +34,8 @@ import matplotlib.pyplot as plt
 import datetime as dt
 
 # the directory with the data
-dir_base='../data_sub_sampled/'
-#dir_base='../full_csv_files/'
+#dir_base='../data_sub_sampled/'
+dir_base='../full_csv_files/'
 
 write_dir='../data_products/hysteresis_test'
 

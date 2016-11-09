@@ -1,6 +1,6 @@
 """ 
-pl_proc_speed.py
-processes the raw data to extract taxi speed and number of taxis on road
+pl_plot_speed.py
+plots results from pl_proc_speed.py
 
 Copyright (C) 2016  Chris Havlin, <https://chrishavlin.wordpress.com>
 
